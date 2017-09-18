@@ -5,6 +5,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 
+import com.google.zxing.integration.android.IntentIntegrator;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -16,5 +18,9 @@ public class MainActivity extends AppCompatActivity {
     public void onLoginClick(View view) {
         Intent login = new Intent(this, LoginActivity.class);
         startActivity(login);
+    }
+
+    public void onScanClick(View view) {
+        new IntentIntegrator(this).initiateScan();
     }
 }
