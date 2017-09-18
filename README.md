@@ -8,6 +8,7 @@ there are 3 main segments to this
 Library used:
 [OnionIoT/oledQrCodeGenerator](https://github.com/OnionIoT/oledQrCodeGenerator)
 [pyotp/pyotp](https://github.com/pyotp/pyotp)
+[journeyapps/zxing-android-embedded](https://github.com/journeyapps/zxing-android-embedded) (library for zxing, qr code scanner)
 
 Hardware used:
 [Onion Omega2+](https://onion.io/store/omega2p/)
