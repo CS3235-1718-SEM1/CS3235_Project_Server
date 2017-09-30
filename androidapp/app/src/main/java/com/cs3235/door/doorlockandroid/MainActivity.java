@@ -16,6 +16,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String currentUser = "";
     private String activatedDoorMessage = "";
+    private String studentSecretKey = "studentSecretKey";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +77,10 @@ public class MainActivity extends AppCompatActivity {
         // activity result received is user's login name
         if (requestCode == LOGIN_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                currentUser = data.getData().toString();
+                String[] loginDetails = data.getData().toString().split(":");
+
+                currentUser = loginDetails[0];
+                studentSecretKey = loginDetails[1];
                 updateMessageText();
             }
         }
