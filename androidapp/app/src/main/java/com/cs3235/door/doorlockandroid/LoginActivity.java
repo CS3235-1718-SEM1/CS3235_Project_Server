@@ -45,8 +45,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * TODO: remove after connecting to a real authentication system.
      */
     private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
+            "foo@example.com:hello", "bar@example.com:world", "a12345678:password"
     };
+
+    private static final String STUDENT_SECRET_KEY = "studentSecretKey";
+
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -276,7 +279,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
 
             // TODO: register the new account here.
-            return true;
+            return false;
         }
 
         @Override
@@ -286,7 +289,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             if (success) {
                 Intent result = new Intent();
-                result.setData(Uri.parse(mEmail));
+                result.setData(Uri.parse(mEmail + ":" + STUDENT_SECRET_KEY));
                 setResult(RESULT_OK, result);
 
                 finish();
