@@ -7,8 +7,17 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.cs3235.door.doorlockandroid.FingerprintActivity.RESULT_FINGERPRINT_NOT_RECOGNIZED;
 
@@ -19,14 +28,74 @@ public class MainActivity extends AppCompatActivity {
 
     private String currentUser = "";
     private String activatedDoorMessage = "";
-    private String studentSecretKey = "studentSecretKey";
+    private String studentSecretKey = "";
 
     private String lastScannedQrCode = "";
+
+    // for HTTP request posting
+    private RequestQueue httpRequestQueue;
+
+    // TODO: Actual webserver IP
+    private static final String WEB_SERVER_URL = "127.0.0.1:5000";
+    private static final String ACCESS_GRANTED_MESSAGE = "Access Granted";
+    private static final String ACCESS_DENIED_MESSAGE = "Access Denied";
+
+    // TODO: Don't hardcode this to allow multiple door access
+    private static final String DOOR_ID = "com1-01-13";
+
+    class UnlockDoorRequest extends StringRequest {
+        public static final String UNLOCK_DOOR_URL = WEB_SERVER_URL + "/openDoor";
+
+        public UnlockDoorRequest(Response.Listener<String> listener, Response.ErrorListener errorListener) {
+            super(Request.Method.POST, UNLOCK_DOOR_URL, listener, errorListener);
+        }
+
+        @Override
+        protected Map<String, String> getParams() {
+            Map<String, String> params = new HashMap<>();
+            params.put("door_id", DOOR_ID);
+            params.put("door_token", lastScannedQrCode);
+            params.put("ivle_id", currentUser);
+            params.put("ivle_token", studentSecretKey);
+
+            return params;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        httpRequestQueue = Volley.newRequestQueue(this);
+    }
+
+    private void unlockDoor() {
+        UnlockDoorRequest request = new UnlockDoorRequest(
+            new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    if (response.equals(ACCESS_GRANTED_MESSAGE)) {
+                        activatedDoorMessage = "Welcome to " + lastScannedQrCode;
+                    } else if (response.equals(ACCESS_DENIED_MESSAGE)) {
+                        activatedDoorMessage = "USER DOES NOT HAVE ACCESS TO DOOR";
+                    } else {
+                        activatedDoorMessage = "Fail: Server sent unrecognized message. " + response;
+                    }
+
+                    updateMessageText();
+                }
+            },
+
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    activatedDoorMessage = "Fail to connect to server";
+                    updateMessageText();
+                }
+            });
+
+        httpRequestQueue.add(request);
     }
 
     public void onLoginClick(View view) {
@@ -100,9 +169,8 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == FINGER_PRINT_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
 
-                // should send HTTP request to activate door
-                activatedDoorMessage = "Welcome to " + lastScannedQrCode;
-                updateMessageText();
+                // now try and unlock the door
+                unlockDoor();
 
             } else if (resultCode == RESULT_CANCELED) {
                 // the fingerprint scanning was abort by user
