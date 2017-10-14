@@ -72,22 +72,11 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        // check whether the intent is resulted from an nfc scanning
-        if (NfcAdapter.getDefaultAdapter(getApplicationContext()) != null) {
-            if (intent != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+        if (intent != null) {
 
-                Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
-
-                if (rawMessages != null && rawMessages.length >= 1) {
-                    // just check the first packet
-                    NdefMessage ndefMessage = (NdefMessage)rawMessages[0];
-
-                    if (ndefMessage.getRecords().length >= 1) {
-                        NdefRecord ndefRecord = ndefMessage.getRecords()[0];
-
-                        lastScannedDoor = ScannedDoorDetails.createDoorDetailsFromNfc(ndefRecord.toUri().toString());
-                        activateFingerprintActivity();
-                    }
+            if (NfcAdapter.getDefaultAdapter(getApplicationContext()) != null) {
+                if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+                    handleNfcIntent(intent);
                 }
             }
         }
@@ -103,6 +92,23 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
             handleFingerprintActivityResult(resultCode);
         } else {
             super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    private void handleNfcIntent(Intent intent) {
+        // TODO: Probably invent a better protocol?
+        Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+
+        if (rawMessages != null && rawMessages.length >= 1) {
+            // just check the first packet
+            NdefMessage ndefMessage = (NdefMessage)rawMessages[0];
+
+            if (ndefMessage.getRecords().length >= 1) {
+                NdefRecord ndefRecord = ndefMessage.getRecords()[0];
+
+                lastScannedDoor = ScannedDoorDetails.createDoorDetailsFromNfc(ndefRecord.toUri().toString());
+                activateFingerprintActivity();
+            }
         }
     }
 
