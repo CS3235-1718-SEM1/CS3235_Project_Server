@@ -1,14 +1,10 @@
 package com.cs3235.door.doorlockandroid;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
-import android.nfc.Tag;
 import android.os.Parcelable;
-import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,107 +12,35 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
+import com.cs3235.door.doorlockandroid.door.DoorUnlockResultCallback;
+import com.cs3235.door.doorlockandroid.door.DoorUnlocker;
+import com.cs3235.door.doorlockandroid.door.ScannedDoorDetails;
+import com.cs3235.door.doorlockandroid.https.HttpManager;
+import com.cs3235.door.doorlockandroid.login.User;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static com.cs3235.door.doorlockandroid.FingerprintActivity.RESULT_FINGERPRINT_NOT_RECOGNIZED;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements DoorUnlockResultCallback {
 
     private static int LOGIN_REQUEST_CODE = 0x000000001;
     private static int FINGER_PRINT_REQUEST_CODE = 0x000000002;
 
-    private String currentUser = "";
     private String activatedDoorMessage = "";
-    private String studentSecretKey = "";
 
-    private String lastScannedQrCode = "";
-
-    // for HTTP request posting
-    private RequestQueue httpRequestQueue;
-
-    // TODO: Actual webserver IP
-    private static final String ACCESS_GRANTED_MESSAGE = "Access Granted";
-    private static final String ACCESS_DENIED_MESSAGE = "Access Denied";
-
-    // TODO: Don't hardcode this to allow multiple door access
-    private static final String DOOR_ID = "com1-01-13";
-
-
-
-    class UnlockDoorRequest extends StringRequest {
-        public static final String UNLOCK_DOOR_URL = "/openDoor";
-
-        public UnlockDoorRequest(Response.Listener<String> listener, Response.ErrorListener errorListener) {
-            super(Request.Method.POST, getWebServerUrl() + UNLOCK_DOOR_URL, listener, errorListener);
-        }
-
-        @Override
-        protected Map<String, String> getParams() {
-            Map<String, String> params = new HashMap<>();
-            params.put("door_id", DOOR_ID);
-            params.put("door_token", lastScannedQrCode);
-            params.put("ivle_id", currentUser);
-            params.put("ivle_token", studentSecretKey);
-
-            return params;
-        }
-    }
-
-    private String getWebServerUrl() {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        String webServerIp = sharedPref.getString("pref_doorServerUrl", "127.0.0.1");
-
-        // TODO: Actual webserver IP
-        return webServerIp + ":5000";
-    }
+    private ScannedDoorDetails lastScannedDoor = null;
+    private User loggedInUser = null;
+    private HttpManager httpManager;
+    private DoorUnlocker doorUnlocker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        httpRequestQueue = Volley.newRequestQueue(this);
-    }
-
-    private void unlockDoor() {
-        UnlockDoorRequest request = new UnlockDoorRequest(
-            new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    if (response.equals(ACCESS_GRANTED_MESSAGE)) {
-                        activatedDoorMessage = "Welcome to " + lastScannedQrCode;
-                    } else if (response.equals(ACCESS_DENIED_MESSAGE)) {
-                        activatedDoorMessage = "USER DOES NOT HAVE ACCESS TO DOOR";
-                    } else {
-                        activatedDoorMessage = "Fail: Server sent unrecognized message. " + response;
-                    }
-
-                    updateMessageText();
-                }
-            },
-
-            new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    activatedDoorMessage = "Fail to connect to server";
-                    updateMessageText();
-                }
-            });
-
-        Toast toast = Toast.makeText(getApplicationContext(), "Connecting to " + request.getUrl(), Toast.LENGTH_SHORT);
-        toast.show();
-
-        httpRequestQueue.add(request);
+        httpManager = new HttpManager(this);
+        doorUnlocker = new DoorUnlocker(httpManager, this);
     }
 
     public void onSettingsClick(View view) {
@@ -125,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onLoginClick(View view) {
-        unlockDoor();
         Intent login = new Intent(this, LoginActivity.class);
         startActivityForResult(login, LOGIN_REQUEST_CODE);
     }
@@ -139,44 +62,21 @@ public class MainActivity extends AppCompatActivity {
         new IntentIntegrator(this).initiateScan();
     }
 
-    private void updateMessageText() {
-        TextView textView = (TextView) findViewById(R.id.message);
-
-        String textViewContent = "";
-
-        if (currentUser.isEmpty()) {
-            textViewContent = "Not logged in. ";
-        }else {
-            textViewContent = "Logged in as " + currentUser + ". ";
-        }
-
-        if (!activatedDoorMessage.isEmpty()) {
-            textViewContent += activatedDoorMessage;
-        }
-
-        textView.setText(textViewContent);
+    @Override
+    public void doorUnlockStatusUpdated(String newStatus) {
+        activatedDoorMessage = newStatus;
+        refreshMessage();
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        // check whether the intent is resulted from an nfc scanning
-        if (NfcAdapter.getDefaultAdapter(getApplicationContext()) != null) {
-            if (intent != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+        if (intent != null) {
 
-                Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
-
-                if (rawMessages != null && rawMessages.length >= 1) {
-                    // just check the first packet
-                    NdefMessage ndefMessage = (NdefMessage)rawMessages[0];
-
-                    if (ndefMessage.getRecords().length >= 1) {
-                        NdefRecord ndefRecord = ndefMessage.getRecords()[0];
-
-                        lastScannedQrCode = ndefRecord.toUri().toString();
-                        activateFingerprintActivity();
-                    }
+            if (NfcAdapter.getDefaultAdapter(getApplicationContext()) != null) {
+                if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+                    handleNfcIntent(intent);
                 }
             }
         }
@@ -184,58 +84,102 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        // activity result received is QR code
         if (requestCode == IntentIntegrator.REQUEST_CODE) {
+            handleQrScanActivityResult(requestCode, resultCode, data);
+        } else if (requestCode == LOGIN_REQUEST_CODE) {
+            handleLoginActivityResult(resultCode, data);
+        } else if (requestCode == FINGER_PRINT_REQUEST_CODE) {
+            handleFingerprintActivityResult(resultCode);
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
 
-            IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+    private void handleNfcIntent(Intent intent) {
+        // TODO: Probably invent a better protocol?
+        Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
 
-            if(result == null || result.getContents() == null) {
-                // the QR scanning is cancelled...
-                Snackbar mySnackbar = Snackbar.make(findViewById(R.id.mainActivity),
-                    "QR Code scanning was cancelled", Snackbar.LENGTH_SHORT);
-                mySnackbar.show();
+        if (rawMessages != null && rawMessages.length >= 1) {
+            // just check the first packet
+            NdefMessage ndefMessage = (NdefMessage)rawMessages[0];
 
-                activatedDoorMessage = "";
-            } else {
-                // we scanned something
-                lastScannedQrCode = result.getContents();
+            if (ndefMessage.getRecords().length >= 1) {
+                NdefRecord ndefRecord = ndefMessage.getRecords()[0];
+
+                lastScannedDoor = ScannedDoorDetails.createDoorDetailsFromNfc(ndefRecord.toUri().toString());
                 activateFingerprintActivity();
             }
+        }
+    }
 
-            updateMessageText();
+    private void handleFingerprintActivityResult(int resultCode) {
+        if (resultCode == RESULT_OK) {
+            doorUnlocker.unlockDoor(lastScannedDoor, loggedInUser);
+            spawnToastMessage("Trying to unlock door...");
+        } else if (resultCode == RESULT_CANCELED) {
+            spawnSnackbarMessage("Fingerprint scanning failed: Authentication cancelled");
+        } else if (resultCode == RESULT_FINGERPRINT_NOT_RECOGNIZED) {
+            spawnSnackbarMessage("Fingerprint does not belong to user!");
+        }
+    }
+
+    private void handleLoginActivityResult(int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            loggedInUser = User.createFromLoginResultIntent(data);
+            refreshMessage();
+        }
+    }
+
+    private void handleQrScanActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+
+        boolean isScanningCancelled = (result == null || result.getContents() == null);
+
+        if(isScanningCancelled) {
+            spawnSnackbarMessage("QR Code scanning was cancelled");
+            activatedDoorMessage = "";
+        } else {
+            // we scanned something
+            lastScannedDoor = ScannedDoorDetails.createDoorDetailsFromQrCode(result.getContents());
+            activateFingerprintActivity();
         }
 
-        // activity result received is user's login name
-        if (requestCode == LOGIN_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                String[] loginDetails = data.getData().toString().split(":");
+        refreshMessage();
+    }
 
-                currentUser = loginDetails[0];
-                studentSecretKey = loginDetails[1];
-                updateMessageText();
-            }
+    private void spawnToastMessage(String text) {
+        Toast toast = Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT);
+        toast.show();
+    }
+
+    private void spawnSnackbarMessage(String text) {
+        Snackbar snackbar = Snackbar.make(findViewById(R.id.mainActivity),
+                text, Snackbar.LENGTH_SHORT);
+        snackbar.show();
+    }
+
+    private void refreshMessage() {
+        updateMessageText(constructMessageText());
+    }
+
+    private String constructMessageText() {
+        String output = "";
+
+        if (loggedInUser == null) {
+            output = "Not logged in.";
+        } else {
+            output = "Logged in as " + loggedInUser.ivleId + ".";
         }
 
-        // activity result received is fingerprint authentication
-        if (requestCode == FINGER_PRINT_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-
-                // now try and unlock the door
-                unlockDoor();
-
-            } else if (resultCode == RESULT_CANCELED) {
-                // the fingerprint scanning was abort by user
-                Snackbar mySnackbar = Snackbar.make(findViewById(R.id.mainActivity),
-                        "Fingerprint scanning failed: Authentication cancelled", Snackbar.LENGTH_SHORT);
-                mySnackbar.show();
-
-            } else if (resultCode == RESULT_FINGERPRINT_NOT_RECOGNIZED) {
-                // this is not user's fingerprints!
-                Snackbar mySnackbar = Snackbar.make(findViewById(R.id.mainActivity),
-                        "Fingerprint does not belong to user!", Snackbar.LENGTH_SHORT);
-                mySnackbar.show();
-            }
+        if (!activatedDoorMessage.isEmpty()) {
+            output += " " + activatedDoorMessage;
         }
+
+        return output;
+    }
+
+    private void updateMessageText(String newMessageText) {
+        TextView textView = (TextView) findViewById(R.id.message);
+        textView.setText(newMessageText);
     }
 }
