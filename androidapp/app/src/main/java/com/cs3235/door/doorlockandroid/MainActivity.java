@@ -104,6 +104,11 @@ public class MainActivity extends AppCompatActivity {
         httpRequestQueue.add(request);
     }
 
+    public void onSettingsClick(View view) {
+        Intent settings = new Intent(this, SettingsActivity.class);
+        startActivity(settings);
+    }
+
     public void onLoginClick(View view) {
         Intent login = new Intent(this, LoginActivity.class);
         startActivityForResult(login, LOGIN_REQUEST_CODE);
