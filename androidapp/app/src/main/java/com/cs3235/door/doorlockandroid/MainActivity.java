@@ -1,12 +1,10 @@
 package com.cs3235.door.doorlockandroid;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.os.Parcelable;
-import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,10 +12,8 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.Volley;
 import com.cs3235.door.doorlockandroid.door.ScannedDoorDetails;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
 import com.cs3235.door.doorlockandroid.https.UnlockDoorRequest;
@@ -66,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
                             activatedDoorMessage = "Fail: Server sent unrecognized message. " + response;
                         }
 
-                        updateMessageText();
+                        refreshMessage();
                     }
                 },
 
@@ -74,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         activatedDoorMessage = "Fail to connect to server";
-                        updateMessageText();
+                        refreshMessage();
                     }
                 }
         );
@@ -102,24 +98,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void onScanClick(View view) {
         new IntentIntegrator(this).initiateScan();
-    }
-
-    private void updateMessageText() {
-        TextView textView = (TextView) findViewById(R.id.message);
-
-        String textViewContent = "";
-
-        if (loggedInUser == null) {
-            textViewContent = "Not logged in. ";
-        } else {
-            textViewContent = "Logged in as " + loggedInUser.ivleId + ". ";
-        }
-
-        if (!activatedDoorMessage.isEmpty()) {
-            textViewContent += activatedDoorMessage;
-        }
-
-        textView.setText(textViewContent);
     }
 
     @Override
@@ -173,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
     private void handleLoginActivityResult(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             loggedInUser = User.createFromLoginResultIntent(data);
-            updateMessageText();
+            refreshMessage();
         }
     }
 
@@ -191,12 +169,37 @@ public class MainActivity extends AppCompatActivity {
             activateFingerprintActivity();
         }
 
-        updateMessageText();
+        refreshMessage();
     }
 
     private void spawnSnackbarMessage(String text) {
         Snackbar snackbar = Snackbar.make(findViewById(R.id.mainActivity),
                 text, Snackbar.LENGTH_SHORT);
         snackbar.show();
+    }
+
+    private void refreshMessage() {
+        updateMessageText(constructMessageText());
+    }
+
+    private String constructMessageText() {
+        String output = "";
+
+        if (loggedInUser == null) {
+            output = "Not logged in.";
+        } else {
+            output = "Logged in as " + loggedInUser.ivleId + ".";
+        }
+
+        if (!activatedDoorMessage.isEmpty()) {
+            output += " " + activatedDoorMessage;
+        }
+
+        return output;
+    }
+
+    private void updateMessageText(String newMessageText) {
+        TextView textView = (TextView) findViewById(R.id.message);
+        textView.setText(newMessageText);
     }
 }
