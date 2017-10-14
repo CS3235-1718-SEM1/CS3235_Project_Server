@@ -12,18 +12,17 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
+import com.cs3235.door.doorlockandroid.door.DoorUnlockResultCallback;
+import com.cs3235.door.doorlockandroid.door.DoorUnlocker;
 import com.cs3235.door.doorlockandroid.door.ScannedDoorDetails;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
-import com.cs3235.door.doorlockandroid.https.UnlockDoorRequest;
 import com.cs3235.door.doorlockandroid.login.User;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import static com.cs3235.door.doorlockandroid.FingerprintActivity.RESULT_FINGERPRINT_NOT_RECOGNIZED;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements DoorUnlockResultCallback {
 
     private static int LOGIN_REQUEST_CODE = 0x000000001;
     private static int FINGER_PRINT_REQUEST_CODE = 0x000000002;
@@ -33,10 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private ScannedDoorDetails lastScannedDoor = null;
     private User loggedInUser = null;
     private HttpManager httpManager;
-
-    // TODO: Actual webserver IP
-    private static final String ACCESS_GRANTED_MESSAGE = "Access Granted";
-    private static final String ACCESS_DENIED_MESSAGE = "Access Denied";
+    private DoorUnlocker doorUnlocker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,41 +40,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         httpManager = new HttpManager(this);
-    }
-
-    private void unlockDoor() {
-        UnlockDoorRequest request = new UnlockDoorRequest(
-                httpManager,
-                lastScannedDoor,
-                loggedInUser,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        if (response.equals(ACCESS_GRANTED_MESSAGE)) {
-                            activatedDoorMessage = "Welcome to " + lastScannedDoor.id;
-                        } else if (response.equals(ACCESS_DENIED_MESSAGE)) {
-                            activatedDoorMessage = "USER DOES NOT HAVE ACCESS TO DOOR";
-                        } else {
-                            activatedDoorMessage = "Fail: Server sent unrecognized message. " + response;
-                        }
-
-                        refreshMessage();
-                    }
-                },
-
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        activatedDoorMessage = "Fail to connect to server";
-                        refreshMessage();
-                    }
-                }
-        );
-
-        Toast toast = Toast.makeText(getApplicationContext(), "Connecting to " + request.getUrl(), Toast.LENGTH_SHORT);
-        toast.show();
-
-        httpManager.sendNewHttpRequest(request);
+        doorUnlocker = new DoorUnlocker(httpManager, this);
     }
 
     public void onSettingsClick(View view) {
@@ -98,6 +60,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void onScanClick(View view) {
         new IntentIntegrator(this).initiateScan();
+    }
+
+    @Override
+    public void doorUnlockStatusUpdated(String newStatus) {
+        activatedDoorMessage = newStatus;
+        refreshMessage();
     }
 
     @Override
@@ -140,7 +108,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleFingerprintActivityResult(int resultCode) {
         if (resultCode == RESULT_OK) {
-            unlockDoor();
+            doorUnlocker.unlockDoor(lastScannedDoor, loggedInUser);
+            spawnToastMessage("Trying to unlock door...");
         } else if (resultCode == RESULT_CANCELED) {
             spawnSnackbarMessage("Fingerprint scanning failed: Authentication cancelled");
         } else if (resultCode == RESULT_FINGERPRINT_NOT_RECOGNIZED) {
@@ -170,6 +139,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         refreshMessage();
+    }
+
+    private void spawnToastMessage(String text) {
+        Toast toast = Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT);
+        toast.show();
     }
 
     private void spawnSnackbarMessage(String text) {
