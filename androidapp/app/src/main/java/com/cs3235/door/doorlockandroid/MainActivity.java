@@ -19,6 +19,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
 import com.cs3235.door.doorlockandroid.door.ScannedDoorDetails;
+import com.cs3235.door.doorlockandroid.https.HttpManager;
 import com.cs3235.door.doorlockandroid.https.UnlockDoorRequest;
 import com.cs3235.door.doorlockandroid.login.User;
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -35,33 +36,23 @@ public class MainActivity extends AppCompatActivity {
 
     private ScannedDoorDetails lastScannedDoor = null;
     private User loggedInUser = null;
-
-    // for HTTP request posting
-    private RequestQueue httpRequestQueue;
+    private HttpManager httpManager;
 
     // TODO: Actual webserver IP
     private static final String ACCESS_GRANTED_MESSAGE = "Access Granted";
     private static final String ACCESS_DENIED_MESSAGE = "Access Denied";
-
-    private String getWebServerUrl() {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        String webServerIp = sharedPref.getString("pref_doorServerUrl", "127.0.0.1");
-
-        // TODO: Actual webserver IP
-        return webServerIp + ":5000";
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        httpRequestQueue = Volley.newRequestQueue(this);
+        httpManager = new HttpManager(this);
     }
 
     private void unlockDoor() {
         UnlockDoorRequest request = new UnlockDoorRequest(
-                getWebServerUrl(),
+                httpManager,
                 lastScannedDoor,
                 loggedInUser,
                 new Response.Listener<String>() {
@@ -91,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         Toast toast = Toast.makeText(getApplicationContext(), "Connecting to " + request.getUrl(), Toast.LENGTH_SHORT);
         toast.show();
 
-        httpRequestQueue.add(request);
+        httpManager.sendNewHttpRequest(request);
     }
 
     public void onSettingsClick(View view) {

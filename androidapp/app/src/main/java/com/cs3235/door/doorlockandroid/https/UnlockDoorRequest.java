@@ -15,11 +15,12 @@ public class UnlockDoorRequest extends StringRequest {
     private final ScannedDoorDetails doorToUnlock;
     private final User requester;
 
-    public UnlockDoorRequest(String doorServerUrl, ScannedDoorDetails doorToUnlock,
+    public UnlockDoorRequest(HttpManager httpManager,
+                             ScannedDoorDetails doorToUnlock,
                              User requester,
                              Response.Listener<String> listener,
                              Response.ErrorListener errorListener) {
-        super(Request.Method.POST, doorServerUrl + UNLOCK_DOOR_URL, listener, errorListener);
+        super(Request.Method.POST, httpManager.getDoorServerUrl() + UNLOCK_DOOR_URL, listener, errorListener);
 
         this.doorToUnlock = doorToUnlock;
         this.requester = requester;
