@@ -183,58 +183,57 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        // activity result received is QR code
         if (requestCode == IntentIntegrator.REQUEST_CODE) {
+            handleQrScanActivityResult(requestCode, resultCode, data);
+        } else if (requestCode == LOGIN_REQUEST_CODE) {
+            handleLoginActivityResult(resultCode, data);
+        } else if (requestCode == FINGER_PRINT_REQUEST_CODE) {
+            handleFingerprintActivityResult(resultCode);
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
 
-            IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+    private void handleFingerprintActivityResult(int resultCode) {
+        if (resultCode == RESULT_OK) {
+            unlockDoor();
+        } else if (resultCode == RESULT_CANCELED) {
+            spawnSnackbarMessage("Fingerprint scanning failed: Authentication cancelled");
+        } else if (resultCode == RESULT_FINGERPRINT_NOT_RECOGNIZED) {
+            spawnSnackbarMessage("Fingerprint does not belong to user!");
+        }
+    }
 
-            if(result == null || result.getContents() == null) {
-                // the QR scanning is cancelled...
-                Snackbar mySnackbar = Snackbar.make(findViewById(R.id.mainActivity),
-                    "QR Code scanning was cancelled", Snackbar.LENGTH_SHORT);
-                mySnackbar.show();
+    private void handleLoginActivityResult(int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            String[] loginDetails = data.getData().toString().split(":");
 
-                activatedDoorMessage = "";
-            } else {
-                // we scanned something
-                lastScannedQrCode = result.getContents();
-                activateFingerprintActivity();
-            }
-
+            currentUser = loginDetails[0];
+            studentSecretKey = loginDetails[1];
             updateMessageText();
         }
+    }
 
-        // activity result received is user's login name
-        if (requestCode == LOGIN_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                String[] loginDetails = data.getData().toString().split(":");
+    private void handleQrScanActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
 
-                currentUser = loginDetails[0];
-                studentSecretKey = loginDetails[1];
-                updateMessageText();
-            }
+        boolean isScanningCancelled = (result == null || result.getContents() == null);
+
+        if(isScanningCancelled) {
+            spawnSnackbarMessage("QR Code scanning was cancelled");
+            activatedDoorMessage = "";
+        } else {
+            // we scanned something
+            lastScannedQrCode = result.getContents();
+            activateFingerprintActivity();
         }
 
-        // activity result received is fingerprint authentication
-        if (requestCode == FINGER_PRINT_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
+        updateMessageText();
+    }
 
-                // now try and unlock the door
-                unlockDoor();
-
-            } else if (resultCode == RESULT_CANCELED) {
-                // the fingerprint scanning was abort by user
-                Snackbar mySnackbar = Snackbar.make(findViewById(R.id.mainActivity),
-                        "Fingerprint scanning failed: Authentication cancelled", Snackbar.LENGTH_SHORT);
-                mySnackbar.show();
-
-            } else if (resultCode == RESULT_FINGERPRINT_NOT_RECOGNIZED) {
-                // this is not user's fingerprints!
-                Snackbar mySnackbar = Snackbar.make(findViewById(R.id.mainActivity),
-                        "Fingerprint does not belong to user!", Snackbar.LENGTH_SHORT);
-                mySnackbar.show();
-            }
-        }
+    private void spawnSnackbarMessage(String text) {
+        Snackbar snackbar = Snackbar.make(findViewById(R.id.mainActivity),
+                text, Snackbar.LENGTH_SHORT);
+        snackbar.show();
     }
 }
