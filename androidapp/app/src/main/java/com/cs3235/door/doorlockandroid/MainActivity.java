@@ -1,11 +1,20 @@
 package com.cs3235.door.doorlockandroid;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
+import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -36,18 +45,19 @@ public class MainActivity extends AppCompatActivity {
     private RequestQueue httpRequestQueue;
 
     // TODO: Actual webserver IP
-    private static final String WEB_SERVER_URL = "127.0.0.1:5000";
     private static final String ACCESS_GRANTED_MESSAGE = "Access Granted";
     private static final String ACCESS_DENIED_MESSAGE = "Access Denied";
 
     // TODO: Don't hardcode this to allow multiple door access
     private static final String DOOR_ID = "com1-01-13";
 
+
+
     class UnlockDoorRequest extends StringRequest {
-        public static final String UNLOCK_DOOR_URL = WEB_SERVER_URL + "/openDoor";
+        public static final String UNLOCK_DOOR_URL = "/openDoor";
 
         public UnlockDoorRequest(Response.Listener<String> listener, Response.ErrorListener errorListener) {
-            super(Request.Method.POST, UNLOCK_DOOR_URL, listener, errorListener);
+            super(Request.Method.POST, getWebServerUrl() + UNLOCK_DOOR_URL, listener, errorListener);
         }
 
         @Override
@@ -60,6 +70,14 @@ public class MainActivity extends AppCompatActivity {
 
             return params;
         }
+    }
+
+    private String getWebServerUrl() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        String webServerIp = sharedPref.getString("pref_doorServerUrl", "127.0.0.1");
+
+        // TODO: Actual webserver IP
+        return webServerIp + ":5000";
     }
 
     @Override
@@ -95,10 +113,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+        Toast toast = Toast.makeText(getApplicationContext(), "Connecting to " + request.getUrl(), Toast.LENGTH_SHORT);
+        toast.show();
+
         httpRequestQueue.add(request);
     }
 
+    public void onSettingsClick(View view) {
+        Intent settings = new Intent(this, SettingsActivity.class);
+        startActivity(settings);
+    }
+
     public void onLoginClick(View view) {
+        unlockDoor();
         Intent login = new Intent(this, LoginActivity.class);
         startActivityForResult(login, LOGIN_REQUEST_CODE);
     }
@@ -128,6 +155,31 @@ public class MainActivity extends AppCompatActivity {
         }
 
         textView.setText(textViewContent);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        // check whether the intent is resulted from an nfc scanning
+        if (NfcAdapter.getDefaultAdapter(getApplicationContext()) != null) {
+            if (intent != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+
+                Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+
+                if (rawMessages != null && rawMessages.length >= 1) {
+                    // just check the first packet
+                    NdefMessage ndefMessage = (NdefMessage)rawMessages[0];
+
+                    if (ndefMessage.getRecords().length >= 1) {
+                        NdefRecord ndefRecord = ndefMessage.getRecords()[0];
+
+                        lastScannedQrCode = ndefRecord.toUri().toString();
+                        activateFingerprintActivity();
+                    }
+                }
+            }
+        }
     }
 
     @Override
