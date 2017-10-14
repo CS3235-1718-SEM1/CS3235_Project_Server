@@ -30,6 +30,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.cs3235.door.doorlockandroid.login.LoginResultIntentExtra;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +47,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * TODO: remove after connecting to a real authentication system.
      */
     private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "student_matric:password"
+            "studentmatric:password"
     };
 
     private static final String STUDENT_SECRET_KEY = "studentSecretKey";
@@ -289,7 +291,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             if (success) {
                 Intent result = new Intent();
-                result.setData(Uri.parse(mEmail + ":" + STUDENT_SECRET_KEY));
+                result.putExtra(LoginResultIntentExtra.EXTRA_USER_MATRIC, mEmail);
+                result.putExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY, STUDENT_SECRET_KEY);
                 setResult(RESULT_OK, result);
 
                 finish();

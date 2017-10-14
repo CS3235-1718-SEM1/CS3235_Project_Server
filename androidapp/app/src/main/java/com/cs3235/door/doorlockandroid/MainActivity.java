@@ -22,6 +22,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.cs3235.door.doorlockandroid.login.LoginResultIntentExtra;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -206,10 +207,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleLoginActivityResult(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
-            String[] loginDetails = data.getData().toString().split(":");
-
-            currentUser = loginDetails[0];
-            studentSecretKey = loginDetails[1];
+            currentUser = data.getStringExtra(LoginResultIntentExtra.EXTRA_USER_MATRIC);
+            studentSecretKey = data.getStringExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY);
             updateMessageText();
         }
     }
