@@ -125,7 +125,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onLoginClick(View view) {
-        unlockDoor();
         Intent login = new Intent(this, LoginActivity.class);
         startActivityForResult(login, LOGIN_REQUEST_CODE);
     }
