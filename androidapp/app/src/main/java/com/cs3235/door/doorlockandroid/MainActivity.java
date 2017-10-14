@@ -14,6 +14,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -112,6 +113,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+        Toast toast = Toast.makeText(getApplicationContext(), "Connecting to " + request.getUrl(), Toast.LENGTH_SHORT);
+        toast.show();
+
         httpRequestQueue.add(request);
     }
 
@@ -121,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onLoginClick(View view) {
+        unlockDoor();
         Intent login = new Intent(this, LoginActivity.class);
         startActivityForResult(login, LOGIN_REQUEST_CODE);
     }
