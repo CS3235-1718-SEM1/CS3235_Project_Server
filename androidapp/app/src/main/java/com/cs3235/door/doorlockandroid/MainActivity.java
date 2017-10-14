@@ -1,6 +1,12 @@
 package com.cs3235.door.doorlockandroid;
 
 import android.content.Intent;
+import android.net.Uri;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
+import android.os.Parcelable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -128,6 +134,31 @@ public class MainActivity extends AppCompatActivity {
         }
 
         textView.setText(textViewContent);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        // check whether the intent is resulted from an nfc scanning
+        if (NfcAdapter.getDefaultAdapter(getApplicationContext()) != null) {
+            if (intent != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+
+                Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+
+                if (rawMessages != null && rawMessages.length >= 1) {
+                    // just check the first packet
+                    NdefMessage ndefMessage = (NdefMessage)rawMessages[0];
+
+                    if (ndefMessage.getRecords().length >= 1) {
+                        NdefRecord ndefRecord = ndefMessage.getRecords()[0];
+
+                        lastScannedQrCode = ndefRecord.toUri().toString();
+                        activateFingerprintActivity();
+                    }
+                }
+            }
+        }
     }
 
     @Override
