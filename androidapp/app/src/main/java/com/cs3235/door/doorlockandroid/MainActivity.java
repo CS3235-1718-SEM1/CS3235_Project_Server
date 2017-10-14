@@ -1,12 +1,14 @@
 package com.cs3235.door.doorlockandroid;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -42,18 +44,19 @@ public class MainActivity extends AppCompatActivity {
     private RequestQueue httpRequestQueue;
 
     // TODO: Actual webserver IP
-    private static final String WEB_SERVER_URL = "127.0.0.1:5000";
     private static final String ACCESS_GRANTED_MESSAGE = "Access Granted";
     private static final String ACCESS_DENIED_MESSAGE = "Access Denied";
 
     // TODO: Don't hardcode this to allow multiple door access
     private static final String DOOR_ID = "com1-01-13";
 
+
+
     class UnlockDoorRequest extends StringRequest {
-        public static final String UNLOCK_DOOR_URL = WEB_SERVER_URL + "/openDoor";
+        public static final String UNLOCK_DOOR_URL = "/openDoor";
 
         public UnlockDoorRequest(Response.Listener<String> listener, Response.ErrorListener errorListener) {
-            super(Request.Method.POST, UNLOCK_DOOR_URL, listener, errorListener);
+            super(Request.Method.POST, getWebServerUrl() + UNLOCK_DOOR_URL, listener, errorListener);
         }
 
         @Override
@@ -66,6 +69,14 @@ public class MainActivity extends AppCompatActivity {
 
             return params;
         }
+    }
+
+    private String getWebServerUrl() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        String webServerIp = sharedPref.getString("pref_doorServerUrl", "127.0.0.1");
+
+        // TODO: Actual webserver IP
+        return webServerIp + ":5000";
     }
 
     @Override
