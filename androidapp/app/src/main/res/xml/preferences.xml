@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:key="pref_doorServerUrl"
+        android:title="Door Server Url"
+        android:defaultValue="@string/door_server_url_default"
+        android:summary="Sets the URl to the door server"/>
+</PreferenceScreen>
