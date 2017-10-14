@@ -2,11 +2,9 @@ package com.cs3235.door.doorlockandroid;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
-import android.nfc.Tag;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
@@ -16,20 +14,15 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.cs3235.door.doorlockandroid.door.ScannedDoorDetails;
 import com.cs3235.door.doorlockandroid.https.UnlockDoorRequest;
-import com.cs3235.door.doorlockandroid.login.LoginResultIntentExtra;
+import com.cs3235.door.doorlockandroid.login.User;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.cs3235.door.doorlockandroid.FingerprintActivity.RESULT_FINGERPRINT_NOT_RECOGNIZED;
 
@@ -38,11 +31,10 @@ public class MainActivity extends AppCompatActivity {
     private static int LOGIN_REQUEST_CODE = 0x000000001;
     private static int FINGER_PRINT_REQUEST_CODE = 0x000000002;
 
-    private String currentUser = "";
     private String activatedDoorMessage = "";
-    private String studentSecretKey = "";
 
     private ScannedDoorDetails lastScannedDoor = null;
+    private User loggedInUser = null;
 
     // for HTTP request posting
     private RequestQueue httpRequestQueue;
@@ -71,8 +63,7 @@ public class MainActivity extends AppCompatActivity {
         UnlockDoorRequest request = new UnlockDoorRequest(
                 getWebServerUrl(),
                 lastScannedDoor,
-                currentUser,
-                studentSecretKey,
+                loggedInUser,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -127,10 +118,10 @@ public class MainActivity extends AppCompatActivity {
 
         String textViewContent = "";
 
-        if (currentUser.isEmpty()) {
+        if (loggedInUser == null) {
             textViewContent = "Not logged in. ";
-        }else {
-            textViewContent = "Logged in as " + currentUser + ". ";
+        } else {
+            textViewContent = "Logged in as " + loggedInUser.ivleId + ". ";
         }
 
         if (!activatedDoorMessage.isEmpty()) {
@@ -190,8 +181,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleLoginActivityResult(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
-            currentUser = data.getStringExtra(LoginResultIntentExtra.EXTRA_USER_MATRIC);
-            studentSecretKey = data.getStringExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY);
+            loggedInUser = User.createFromLoginResultIntent(data);
             updateMessageText();
         }
     }

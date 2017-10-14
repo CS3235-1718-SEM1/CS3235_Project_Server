@@ -4,6 +4,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.toolbox.StringRequest;
 import com.cs3235.door.doorlockandroid.door.ScannedDoorDetails;
+import com.cs3235.door.doorlockandroid.login.User;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,18 +13,16 @@ public class UnlockDoorRequest extends StringRequest {
     public static final String UNLOCK_DOOR_URL = "/openDoor";
 
     private final ScannedDoorDetails doorToUnlock;
-    private final String currentUser;
-    private final String userSecretKey;
+    private final User requester;
 
     public UnlockDoorRequest(String doorServerUrl, ScannedDoorDetails doorToUnlock,
-                             String currentUser, String userSecretKey,
+                             User requester,
                              Response.Listener<String> listener,
                              Response.ErrorListener errorListener) {
         super(Request.Method.POST, doorServerUrl + UNLOCK_DOOR_URL, listener, errorListener);
 
         this.doorToUnlock = doorToUnlock;
-        this.currentUser = currentUser;
-        this.userSecretKey = userSecretKey;
+        this.requester = requester;
     }
 
     @Override
@@ -31,8 +30,8 @@ public class UnlockDoorRequest extends StringRequest {
         Map<String, String> params = new HashMap<>();
         params.put("door_id", doorToUnlock.id);
         params.put("door_token", doorToUnlock.otpToken);
-        params.put("ivle_id", currentUser);
-        params.put("ivle_token", userSecretKey);
+        params.put("ivle_id", requester.ivleId);
+        params.put("ivle_token", requester.ivleToken);
 
         return params;
     }
