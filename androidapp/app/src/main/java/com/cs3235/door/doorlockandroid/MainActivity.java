@@ -23,6 +23,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.cs3235.door.doorlockandroid.door.ScannedDoorDetails;
+import com.cs3235.door.doorlockandroid.https.UnlockDoorRequest;
 import com.cs3235.door.doorlockandroid.login.LoginResultIntentExtra;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -50,25 +51,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String ACCESS_GRANTED_MESSAGE = "Access Granted";
     private static final String ACCESS_DENIED_MESSAGE = "Access Denied";
 
-    class UnlockDoorRequest extends StringRequest {
-        public static final String UNLOCK_DOOR_URL = "/openDoor";
-
-        public UnlockDoorRequest(Response.Listener<String> listener, Response.ErrorListener errorListener) {
-            super(Request.Method.POST, getWebServerUrl() + UNLOCK_DOOR_URL, listener, errorListener);
-        }
-
-        @Override
-        protected Map<String, String> getParams() {
-            Map<String, String> params = new HashMap<>();
-            params.put("door_id", lastScannedDoor.id);
-            params.put("door_token", lastScannedDoor.otpToken);
-            params.put("ivle_id", currentUser);
-            params.put("ivle_token", studentSecretKey);
-
-            return params;
-        }
-    }
-
     private String getWebServerUrl() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         String webServerIp = sharedPref.getString("pref_doorServerUrl", "127.0.0.1");
@@ -87,28 +69,33 @@ public class MainActivity extends AppCompatActivity {
 
     private void unlockDoor() {
         UnlockDoorRequest request = new UnlockDoorRequest(
-            new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    if (response.equals(ACCESS_GRANTED_MESSAGE)) {
-                        activatedDoorMessage = "Welcome to " + lastScannedDoor.id;
-                    } else if (response.equals(ACCESS_DENIED_MESSAGE)) {
-                        activatedDoorMessage = "USER DOES NOT HAVE ACCESS TO DOOR";
-                    } else {
-                        activatedDoorMessage = "Fail: Server sent unrecognized message. " + response;
+                getWebServerUrl(),
+                lastScannedDoor,
+                currentUser,
+                studentSecretKey,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        if (response.equals(ACCESS_GRANTED_MESSAGE)) {
+                            activatedDoorMessage = "Welcome to " + lastScannedDoor.id;
+                        } else if (response.equals(ACCESS_DENIED_MESSAGE)) {
+                            activatedDoorMessage = "USER DOES NOT HAVE ACCESS TO DOOR";
+                        } else {
+                            activatedDoorMessage = "Fail: Server sent unrecognized message. " + response;
+                        }
+
+                        updateMessageText();
                     }
+                },
 
-                    updateMessageText();
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        activatedDoorMessage = "Fail to connect to server";
+                        updateMessageText();
+                    }
                 }
-            },
-
-            new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    activatedDoorMessage = "Fail to connect to server";
-                    updateMessageText();
-                }
-            });
+        );
 
         Toast toast = Toast.makeText(getApplicationContext(), "Connecting to " + request.getUrl(), Toast.LENGTH_SHORT);
         toast.show();
