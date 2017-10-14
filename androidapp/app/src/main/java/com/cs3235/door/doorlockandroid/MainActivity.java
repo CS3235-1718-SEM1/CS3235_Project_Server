@@ -22,6 +22,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.cs3235.door.doorlockandroid.door.ScannedDoorDetails;
 import com.cs3235.door.doorlockandroid.login.LoginResultIntentExtra;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private String activatedDoorMessage = "";
     private String studentSecretKey = "";
 
-    private String lastScannedQrCode = "";
+    private ScannedDoorDetails lastScannedDoor = null;
 
     // for HTTP request posting
     private RequestQueue httpRequestQueue;
@@ -48,11 +49,6 @@ public class MainActivity extends AppCompatActivity {
     // TODO: Actual webserver IP
     private static final String ACCESS_GRANTED_MESSAGE = "Access Granted";
     private static final String ACCESS_DENIED_MESSAGE = "Access Denied";
-
-    // TODO: Don't hardcode this to allow multiple door access
-    private static final String DOOR_ID = "com1-01-13";
-
-
 
     class UnlockDoorRequest extends StringRequest {
         public static final String UNLOCK_DOOR_URL = "/openDoor";
@@ -64,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Map<String, String> getParams() {
             Map<String, String> params = new HashMap<>();
-            params.put("door_id", DOOR_ID);
-            params.put("door_token", lastScannedQrCode);
+            params.put("door_id", lastScannedDoor.id);
+            params.put("door_token", lastScannedDoor.otpToken);
             params.put("ivle_id", currentUser);
             params.put("ivle_token", studentSecretKey);
 
@@ -95,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(String response) {
                     if (response.equals(ACCESS_GRANTED_MESSAGE)) {
-                        activatedDoorMessage = "Welcome to " + lastScannedQrCode;
+                        activatedDoorMessage = "Welcome to " + lastScannedDoor.id;
                     } else if (response.equals(ACCESS_DENIED_MESSAGE)) {
                         activatedDoorMessage = "USER DOES NOT HAVE ACCESS TO DOOR";
                     } else {
@@ -174,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
                     if (ndefMessage.getRecords().length >= 1) {
                         NdefRecord ndefRecord = ndefMessage.getRecords()[0];
 
-                        lastScannedQrCode = ndefRecord.toUri().toString();
+                        lastScannedDoor = ScannedDoorDetails.createDoorDetailsFromNfc(ndefRecord.toUri().toString());
                         activateFingerprintActivity();
                     }
                 }
@@ -223,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
             activatedDoorMessage = "";
         } else {
             // we scanned something
-            lastScannedQrCode = result.getContents();
+            lastScannedDoor = ScannedDoorDetails.createDoorDetailsFromQrCode(result.getContents());
             activateFingerprintActivity();
         }
 
