@@ -4,27 +4,17 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.app.LoaderManager.LoaderCallbacks;
 
-import android.content.CursorLoader;
-import android.content.Loader;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -34,11 +24,6 @@ import com.cs3235.door.doorlockandroid.https.HttpManager;
 import com.cs3235.door.doorlockandroid.login.IvleLoginManager;
 import com.cs3235.door.doorlockandroid.login.LoginResultIntentExtra;
 import com.cs3235.door.doorlockandroid.login.User;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static android.Manifest.permission.READ_CONTACTS;
 
 /**
  * A login screen that offers login via email/password.
@@ -184,25 +169,25 @@ public class LoginActivity extends AppCompatActivity {
         private final String mEmail;
         private final String mPassword;
 
-        private final IvleLoginManager ivleLoginManager;
-
-        private User ivleUser;
+        private User loggedInUser;
+        private String errorMessage;
 
         UserLoginTask(String email, String password) {
             mEmail = email;
             mPassword = password;
-
-            ivleLoginManager = new IvleLoginManager(httpManager);
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            ivleUser = ivleLoginManager.loginToIvle(mEmail, mPassword);
+            IvleLoginManager ivleLoginManager = new IvleLoginManager(httpManager);
+            IvleLoginManager.IvleLoginResult ivleResult = ivleLoginManager.loginToIvle(mEmail, mPassword);
 
-            if (ivleUser == null) {
+            if (!ivleResult.successful) {
+                errorMessage = ivleResult.failureMessage;
                 return false;
             }
 
+            loggedInUser = ivleResult.user;
             return true;
         }
 
@@ -213,13 +198,13 @@ public class LoginActivity extends AppCompatActivity {
 
             if (success) {
                 Intent result = new Intent();
-                result.putExtra(LoginResultIntentExtra.EXTRA_USER_MATRIC, ivleUser.ivleId);
-                result.putExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY, ivleUser.ivleToken);
+                result.putExtra(LoginResultIntentExtra.EXTRA_USER_MATRIC, loggedInUser.ivleId);
+                result.putExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY, loggedInUser.ivleToken);
                 setResult(RESULT_OK, result);
 
                 finish();
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                mPasswordView.setError(errorMessage);
                 mPasswordView.requestFocus();
             }
         }
