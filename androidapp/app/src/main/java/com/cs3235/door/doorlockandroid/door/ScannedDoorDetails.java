@@ -11,11 +11,23 @@ public class ScannedDoorDetails {
 
     public static ScannedDoorDetails createDoorDetailsFromQrCode(String qrCodeContent) {
         // TODO: Actual parsing of the content
-        return new ScannedDoorDetails(qrCodeContent, qrCodeContent);
+        String[] keyValue = qrCodeContent.split(":");
+
+        if (keyValue.length < 2) {
+            return new ScannedDoorDetails(qrCodeContent, qrCodeContent);
+        }
+
+        return new ScannedDoorDetails(keyValue[0], keyValue[1]);
     }
 
     public static ScannedDoorDetails createDoorDetailsFromNfc(String nfcContent) {
         // TODO: Actual parsing of the content
-        return new ScannedDoorDetails(nfcContent, nfcContent);
+        String[] keyValue = nfcContent.split(":");
+
+        if (keyValue.length < 2) {
+            return new ScannedDoorDetails(nfcContent, nfcContent);
+        }
+
+        return new ScannedDoorDetails(keyValue[0], keyValue[1]);
     }
 }
