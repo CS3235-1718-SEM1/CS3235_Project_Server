@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         setContentView(R.layout.activity_main);
 
         settingsManager = new SettingsManager(this);
-        httpManager = new HttpManager(this, settingsManager);
+        httpManager = new HttpManager(getApplicationContext(), settingsManager);
         doorUnlocker = new DoorUnlocker(httpManager, this);
     }
 

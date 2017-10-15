@@ -81,7 +81,7 @@ public class LoginActivity extends AppCompatActivity {
         mProgressView = findViewById(R.id.login_progress);
 
         settingsManager = new SettingsManager(this);
-        httpManager = new HttpManager(this, settingsManager);
+        httpManager = new HttpManager(getApplicationContext(), settingsManager);
     }
 
     /**
