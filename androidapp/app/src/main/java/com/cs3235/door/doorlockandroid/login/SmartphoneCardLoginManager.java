@@ -69,7 +69,9 @@ public class SmartphoneCardLoginManager {
                 Thread.sleep(pollInterval);
 
                 synchronized (result) {
-                    if (result.successful) {
+                    // TODO: Add a variable inside SmartphoneCardLoginResult to facilitate loading
+                    // Otherwise we can only depend on SMARTPHONE_STILL_LOADING!
+                    if (!result.failureMessage.equals(SMARTPHONE_STILL_LOADING)) {
                         break;
                     }
                 }
