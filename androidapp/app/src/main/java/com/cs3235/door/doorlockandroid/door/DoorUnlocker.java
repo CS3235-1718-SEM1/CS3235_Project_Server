@@ -54,7 +54,7 @@ public class DoorUnlocker {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        String newStatus = "Fail to connect to server";
+                        String newStatus = "Fail to connect to server - " + error.getMessage();
                         doorStatusUpdateCallback.doorUnlockStatusUpdated(newStatus);
                     }
                 }
