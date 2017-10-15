@@ -47,10 +47,10 @@ Smartphone Authentication is done immediately after the "Logging into IVLE" stag
 
 There will be a QR code display installed outside the room, so that the user can just scan the door to notify the application which room the user wants to unlock. The user will be brought into the fingerprint stage next.
 
-* QR code content: `<door_id>:<door_OTP>`
+* QR code content: `<door_id>,<door_OTP>`
 * Example:
     ```
-    com1-b2-99:235425
+    com1-b2-99,235425
     ```
 
 #### Scanning the Door (NFC)
@@ -62,10 +62,10 @@ This is an alternative way of unlocking the door. There will be a NFC emitter in
 * Total messages expected: 1
 * Total records expected: 1
 * Record type: `URI`
-* Content: `<door_id>:<door_OTP>`
+* Content: `<door_id>,<door_OTP>`
 * Example:
     ```
-    com1-b2-99:235425
+    com1-b2-99,235425
     ```
 
 #### Fingerprint
