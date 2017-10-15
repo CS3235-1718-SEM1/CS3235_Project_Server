@@ -17,6 +17,7 @@ import com.cs3235.door.doorlockandroid.door.DoorUnlocker;
 import com.cs3235.door.doorlockandroid.door.ScannedDoorDetails;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
 import com.cs3235.door.doorlockandroid.login.User;
+import com.cs3235.door.doorlockandroid.settings.SettingsManager;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
 
     private ScannedDoorDetails lastScannedDoor = null;
     private User loggedInUser = null;
+    private SettingsManager settingsManager;
     private HttpManager httpManager;
     private DoorUnlocker doorUnlocker;
 
@@ -39,7 +41,8 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        httpManager = new HttpManager(this);
+        settingsManager = new SettingsManager(this);
+        httpManager = new HttpManager(this, settingsManager);
         doorUnlocker = new DoorUnlocker(httpManager, this);
     }
 
