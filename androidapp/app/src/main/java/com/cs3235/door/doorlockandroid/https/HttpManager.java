@@ -1,20 +1,21 @@
 package com.cs3235.door.doorlockandroid.https;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.cs3235.door.doorlockandroid.settings.SettingsManager;
+
+import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_DOOR_SERVER_URL_KEY;
+import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_SMARTPHONE_CARD_SERVER_URL_KEY;
 
 public class HttpManager {
-    private Context context;
-
+    private SettingsManager settingsManager;
     private RequestQueue httpRequestQueue;
 
-    public HttpManager(Context context) {
-        this.context = context;
+    public HttpManager(Context context, SettingsManager settingsManager) {
+        this.settingsManager = settingsManager;
         this.httpRequestQueue = Volley.newRequestQueue(context);
     }
 
@@ -23,12 +24,10 @@ public class HttpManager {
     }
 
     public String getDoorServerUrl() {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPref.getString("pref_doorServerUrl", "127.0.0.1:5000");
+        return settingsManager.getString(PREF_DOOR_SERVER_URL_KEY, "127.0.0.1:5000");
     }
 
     public String getSmartphoneServerUrl() {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPref.getString("pref_smartphoneCardServerUrl", "127.0.0.1:6000");
+        return settingsManager.getString(PREF_SMARTPHONE_CARD_SERVER_URL_KEY, "127.0.0.1:6000");
     }
 }

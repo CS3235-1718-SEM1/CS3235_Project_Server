@@ -25,6 +25,7 @@ import com.cs3235.door.doorlockandroid.login.IvleLoginManager;
 import com.cs3235.door.doorlockandroid.login.LoginResultIntentExtra;
 import com.cs3235.door.doorlockandroid.login.SmartphoneCardLoginManager;
 import com.cs3235.door.doorlockandroid.login.User;
+import com.cs3235.door.doorlockandroid.settings.SettingsManager;
 
 /**
  * A login screen that offers login via email/password.
@@ -35,6 +36,7 @@ public class LoginActivity extends AppCompatActivity {
      */
     private UserLoginTask mAuthTask = null;
 
+    private SettingsManager settingsManager;
     private HttpManager httpManager;
 
     // UI references.
@@ -74,7 +76,8 @@ public class LoginActivity extends AppCompatActivity {
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
 
-        httpManager = new HttpManager(this);
+        settingsManager = new SettingsManager(this);
+        httpManager = new HttpManager(this, settingsManager);
     }
 
     /**
