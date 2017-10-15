@@ -209,7 +209,8 @@ public class LoginActivity extends AppCompatActivity {
             if (success) {
                 Intent result = new Intent();
                 result.putExtra(LoginResultIntentExtra.EXTRA_USER_MATRIC, loggedInUser.ivleId);
-                result.putExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY, loggedInUser.ivleToken);
+                result.putExtra(LoginResultIntentExtra.EXTRA_USER_IVLE_TOKEN, loggedInUser.ivleToken);
+                result.putExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY, loggedInUser.secretKey);
                 setResult(RESULT_OK, result);
 
                 finish();

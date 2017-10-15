@@ -18,7 +18,6 @@ public class SmartphoneCardLoginManager {
         this.phoneUuid = phoneUuid;
     }
 
-    // TODO: Use IvleUser rather than User
     public SmartphoneCardLoginResult loginToSmartphoneCardSystem(final User ivleUser) {
         final SmartphoneCardLoginResult result = new SmartphoneCardLoginResult();
         result.setFailure(SMARTPHONE_STILL_LOADING);
@@ -38,8 +37,8 @@ public class SmartphoneCardLoginManager {
                             }
                         } else if (response.startsWith(SMARTPHONE_VALID_MESSAGE_PREFIX)) {
                             synchronized (result) {
-                                // TODO: Setup secret token
-                                result.setSuccessful(ivleUser);
+                                String secretKey = response.substring(SMARTPHONE_VALID_MESSAGE_PREFIX.length());
+                                result.setSuccessful(new User(ivleUser.ivleId, ivleUser.ivleToken, secretKey));
                             }
                         } else {
                             synchronized (result) {
