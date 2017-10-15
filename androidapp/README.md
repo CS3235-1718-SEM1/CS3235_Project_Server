@@ -1,5 +1,10 @@
 # Android app
 
+## Libraries used
+
+* [journeyapps/zxing-android-embedded](https://github.com/journeyapps/zxing-android-embedded) (library for zxing, qr code scanner)
+* [aerogear/aerogear-otp-java](https://github.com/aerogear/aerogear-otp-java) (OTP library)
+
 ## Implementation details
 
 ### Tweakable settings

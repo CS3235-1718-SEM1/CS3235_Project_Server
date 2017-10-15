@@ -30,5 +30,6 @@ dependencies {
     compile 'com.android.support:design:26.+'
     compile 'com.journeyapps:zxing-android-embedded:3.5.0'
     compile 'com.android.volley:volley:1.0.0'
+    compile 'org.jboss.aerogear:aerogear-otp-java:1.0.0'
     testCompile 'junit:junit:4.12'
 }
