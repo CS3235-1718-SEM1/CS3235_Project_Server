@@ -23,6 +23,7 @@ import android.widget.TextView;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
 import com.cs3235.door.doorlockandroid.login.IvleLoginManager;
 import com.cs3235.door.doorlockandroid.login.LoginResultIntentExtra;
+import com.cs3235.door.doorlockandroid.login.SmartphoneCardLoginManager;
 import com.cs3235.door.doorlockandroid.login.User;
 
 /**
@@ -187,7 +188,16 @@ public class LoginActivity extends AppCompatActivity {
                 return false;
             }
 
-            loggedInUser = ivleResult.user;
+            // TODO: Implement phoneuuid
+            SmartphoneCardLoginManager smartphoneCardManager = new SmartphoneCardLoginManager(httpManager, "");
+            SmartphoneCardLoginManager.SmartphoneCardLoginResult smartphoneDoorResult =
+                    smartphoneCardManager.loginToSmartphoneCardSystem(ivleResult.user);
+
+            if (!smartphoneDoorResult.successful) {
+                errorMessage = smartphoneDoorResult.failureMessage;
+            }
+
+            loggedInUser = smartphoneDoorResult.user;
             return true;
         }
 
