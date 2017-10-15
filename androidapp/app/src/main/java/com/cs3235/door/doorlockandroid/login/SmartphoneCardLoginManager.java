@@ -38,7 +38,7 @@ public class SmartphoneCardLoginManager {
                         } else if (response.startsWith(SMARTPHONE_VALID_MESSAGE_PREFIX)) {
                             synchronized (result) {
                                 String secretKey = response.substring(SMARTPHONE_VALID_MESSAGE_PREFIX.length()).trim();
-                                result.setSuccessful(new User(ivleUser.ivleId, ivleUser.ivleToken, secretKey));
+                                result.setSuccessful(new User(ivleUser.ivleId, ivleUser.ivleAuth, secretKey));
                             }
                         } else {
                             synchronized (result) {

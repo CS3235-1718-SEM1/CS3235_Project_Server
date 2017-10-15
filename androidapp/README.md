@@ -29,13 +29,13 @@ Smartphone Authentication is done immediately after the "Logging into IVLE" stag
 * HTTP method: `POST`
 * Parameters:
     * `IVLE_id`: IVLE id (matric number)
-    * `IVLE_token`: Token generated from id
+    * `IVLE_auth`: Authentication code returned by IVLE
     * `uuid_id`: Phone user id
 * Example:
     ```
     {
         'IVLE_id': 'e1234567'
-        'IVLE_token': 'abc'
+        'IVLE_auth': 'akgheosughiuohgkjdfhgd'
         'uuid_id': '123e4567-e89b-12d3-a456-426655440000'
     }
     ```
@@ -80,14 +80,14 @@ Upon scanning the door and verifying the fingerprint, a request will be sent to 
 * HTTP method: `POST`
 * Parameters:
     * `IVLE_id`: IVLE id (matric number)
-    * `IVLE_token`: Token generated from id
+    * `IVLE_token`: User's OTP
     * `door_id`: Name of the door
     * `door_token`: Door's OTP
 * Example:
     ```
     {
         'IVLE_id': 'e1234567'
-        'IVLE_token': 'abc'
+        'IVLE_token': '345364'
         'door_id': 'com1-b2-99'
         'door_token': '235425'
     }
