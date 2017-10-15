@@ -26,4 +26,9 @@ public class HttpManager {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
         return sharedPref.getString("pref_doorServerUrl", "127.0.0.1:5000");
     }
+
+    public String getSmartphoneServerUrl() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPref.getString("pref_smartphoneCardServerUrl", "127.0.0.1:6000");
+    }
 }

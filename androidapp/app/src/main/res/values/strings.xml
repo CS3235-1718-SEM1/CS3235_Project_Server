@@ -15,5 +15,5 @@
         completions."
     </string>
     <string name="title_activity_fingerprint">FingerprintActivity</string>
-    <string name="door_server_url_default">127.0.0.1</string>
+    <string name="local_host_ip">127.0.0.1</string>
 </resources>

@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SmartphoneCardLoginRequest extends StringRequest {
-    public static final String UNLOCK_DOOR_URL = "/validateSmartphone";
+    public static final String VALIDATE_PHONE_URL = "/validateSmartphone";
 
     private final User ivleUser;
     private final String phoneUuid;
@@ -19,8 +19,7 @@ public class SmartphoneCardLoginRequest extends StringRequest {
                                       String phoneUuid,
                                       Response.Listener<String> listener,
                                       Response.ErrorListener errorListener) {
-        // TODO: Use the correct server
-        super(Request.Method.POST, httpManager.getDoorServerUrl() + UNLOCK_DOOR_URL, listener, errorListener);
+        super(Request.Method.POST, httpManager.getSmartphoneServerUrl() + VALIDATE_PHONE_URL, listener, errorListener);
 
         this.ivleUser = ivleUser;
         this.phoneUuid = phoneUuid;
