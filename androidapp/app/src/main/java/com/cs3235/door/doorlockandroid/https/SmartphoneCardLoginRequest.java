@@ -28,8 +28,8 @@ public class SmartphoneCardLoginRequest extends StringRequest {
     @Override
     protected Map<String, String> getParams() {
         Map<String, String> params = new HashMap<>();
-        params.put("ivle_id", ivleUser.ivleId);
-        params.put("ivle_token", ivleUser.ivleToken);
+        params.put("IVLE_id", ivleUser.ivleId);
+        params.put("IVLE_token", ivleUser.ivleToken);
         params.put("uuid_id", phoneUuid);
 
         return params;
