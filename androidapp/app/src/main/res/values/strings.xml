@@ -15,5 +15,5 @@
         completions."
     </string>
     <string name="title_activity_fingerprint">FingerprintActivity</string>
-    <string name="local_host_ip">127.0.0.1</string>
+    <string name="local_host_ip">http://127.0.0.1:5000</string>
 </resources>

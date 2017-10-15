@@ -24,10 +24,10 @@ public class HttpManager {
     }
 
     public String getDoorServerUrl() {
-        return settingsManager.getString(PREF_DOOR_SERVER_URL_KEY, "127.0.0.1:5000");
+        return settingsManager.getString(PREF_DOOR_SERVER_URL_KEY, "http://127.0.0.1:5000");
     }
 
     public String getSmartphoneServerUrl() {
-        return settingsManager.getString(PREF_SMARTPHONE_CARD_SERVER_URL_KEY, "127.0.0.1:6000");
+        return settingsManager.getString(PREF_SMARTPHONE_CARD_SERVER_URL_KEY, "http://127.0.0.1:6000");
     }
 }
