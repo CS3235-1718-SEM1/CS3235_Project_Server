@@ -25,4 +25,18 @@ public class User {
                 loginIntentData.getStringExtra(LoginResultIntentExtra.EXTRA_USER_IVLE_TOKEN),
                 loginIntentData.getStringExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY));
     }
+
+    /**
+     * Create an intent containing the user information so that it can be transferred between
+     * activities.
+     */
+    public Intent generateIntent() {
+        Intent result = new Intent();
+
+        result.putExtra(LoginResultIntentExtra.EXTRA_USER_MATRIC, ivleId);
+        result.putExtra(LoginResultIntentExtra.EXTRA_USER_IVLE_TOKEN, ivleToken);
+        result.putExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY, secretKey);
+
+        return result;
+    }
 }
