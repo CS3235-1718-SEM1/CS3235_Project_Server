@@ -63,10 +63,22 @@ public class SmartphoneCardLoginManager {
 
         // wait for http request to send, and set appropriate error message if the attempt failed
         try {
-            Thread.sleep(10000);
+            int pollInterval = 500;
+            int timeOut = 10000;
+            for (int i = 0; i < (timeOut / pollInterval); i++) {
+                Thread.sleep(pollInterval);
+
+                synchronized (result) {
+                    // TODO: Add a variable inside SmartphoneCardLoginResult to facilitate loading
+                    // Otherwise we can only depend on SMARTPHONE_STILL_LOADING!
+                    if (!result.failureMessage.equals(SMARTPHONE_STILL_LOADING)) {
+                        break;
+                    }
+                }
+            }
 
             synchronized (result) {
-                if (result.failureMessage.equals(SMARTPHONE_STILL_LOADING)) {
+                if (!result.successful && result.failureMessage.equals(SMARTPHONE_STILL_LOADING)) {
                     result.setFailure("Server took way too long to response. Timed out.");
                 }
             }

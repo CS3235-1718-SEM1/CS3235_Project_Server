@@ -24,6 +24,11 @@ public class DoorUnlocker {
     public void unlockDoor(ScannedDoorDetails doorToUnlock, User requester) {
         final String doorId = doorToUnlock.id;
 
+        if (requester == null) {
+            doorStatusUpdateCallback.doorUnlockStatusUpdated("No user logged in!");
+            return;
+        }
+
         UnlockDoorRequest request = new UnlockDoorRequest(
                 httpManager,
                 doorToUnlock,
@@ -54,7 +59,7 @@ public class DoorUnlocker {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        String newStatus = "Fail to connect to server";
+                        String newStatus = "Fail to connect to server - " + error.getMessage();
                         doorStatusUpdateCallback.doorUnlockStatusUpdated(newStatus);
                     }
                 }
