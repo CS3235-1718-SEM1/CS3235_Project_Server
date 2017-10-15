@@ -30,7 +30,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.cs3235.door.doorlockandroid.https.HttpManager;
+import com.cs3235.door.doorlockandroid.login.IvleLoginManager;
 import com.cs3235.door.doorlockandroid.login.LoginResultIntentExtra;
+import com.cs3235.door.doorlockandroid.login.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,27 +44,19 @@ import static android.Manifest.permission.READ_CONTACTS;
  * A login screen that offers login via email/password.
  */
 public class LoginActivity extends AppCompatActivity {
-
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "studentmatric:password"
-    };
-
-    private static final String STUDENT_SECRET_KEY = "studentSecretKey";
-
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
+
+    private HttpManager httpManager;
 
     // UI references.
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +87,8 @@ public class LoginActivity extends AppCompatActivity {
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        httpManager = new HttpManager(this);
     }
 
     /**
@@ -187,32 +184,26 @@ public class LoginActivity extends AppCompatActivity {
         private final String mEmail;
         private final String mPassword;
 
+        private final IvleLoginManager ivleLoginManager;
+
+        private User ivleUser;
+
         UserLoginTask(String email, String password) {
             mEmail = email;
             mPassword = password;
+
+            ivleLoginManager = new IvleLoginManager(httpManager);
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
+            ivleUser = ivleLoginManager.loginToIvle(mEmail, mPassword);
 
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
+            if (ivleUser == null) {
                 return false;
             }
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
-
-            // TODO: register the new account here.
-            return false;
+            return true;
         }
 
         @Override
@@ -222,8 +213,8 @@ public class LoginActivity extends AppCompatActivity {
 
             if (success) {
                 Intent result = new Intent();
-                result.putExtra(LoginResultIntentExtra.EXTRA_USER_MATRIC, mEmail);
-                result.putExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY, STUDENT_SECRET_KEY);
+                result.putExtra(LoginResultIntentExtra.EXTRA_USER_MATRIC, ivleUser.ivleId);
+                result.putExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY, ivleUser.ivleToken);
                 setResult(RESULT_OK, result);
 
                 finish();
