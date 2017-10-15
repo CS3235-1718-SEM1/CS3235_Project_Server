@@ -32,7 +32,7 @@ public class UnlockDoorRequest extends StringRequest {
         params.put("door_id", doorToUnlock.id);
         params.put("door_token", doorToUnlock.otpToken);
         params.put("IVLE_id", requester.ivleId);
-        params.put("IVLE_token", requester.ivleToken);
+        params.put("IVLE_token", requester.getUserOtp());
 
         return params;
     }

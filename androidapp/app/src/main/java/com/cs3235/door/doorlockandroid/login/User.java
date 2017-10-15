@@ -2,6 +2,8 @@ package com.cs3235.door.doorlockandroid.login;
 
 import android.content.Intent;
 
+import org.jboss.aerogear.security.otp.Totp;
+
 public class User {
     public final String ivleId;
     public final String ivleToken;
@@ -24,6 +26,11 @@ public class User {
                 loginIntentData.getStringExtra(LoginResultIntentExtra.EXTRA_USER_MATRIC),
                 loginIntentData.getStringExtra(LoginResultIntentExtra.EXTRA_USER_IVLE_TOKEN),
                 loginIntentData.getStringExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY));
+    }
+
+    public String getUserOtp() {
+        Totp totp = new Totp(secretKey);
+        return totp.now();
     }
 
     /**
