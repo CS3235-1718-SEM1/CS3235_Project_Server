@@ -27,6 +27,10 @@ import com.cs3235.door.doorlockandroid.login.SmartphoneCardLoginManager;
 import com.cs3235.door.doorlockandroid.login.User;
 import com.cs3235.door.doorlockandroid.settings.SettingsManager;
 
+import java.util.UUID;
+
+import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_PHONE_UUID_KEY;
+
 /**
  * A login screen that offers login via email/password.
  */
@@ -165,8 +169,14 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private String getPhoneUuid() {
-        // TODO: get proper phone uuid
-        return "";
+        String uuid = settingsManager.getString(PREF_PHONE_UUID_KEY, "");
+
+        if (uuid.isEmpty()) {
+            uuid = UUID.randomUUID().toString();
+            settingsManager.setString(PREF_PHONE_UUID_KEY, uuid);
+        }
+
+        return uuid;
     }
 
     /**
