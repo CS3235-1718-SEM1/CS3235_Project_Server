@@ -24,6 +24,11 @@ public class DoorUnlocker {
     public void unlockDoor(ScannedDoorDetails doorToUnlock, User requester) {
         final String doorId = doorToUnlock.id;
 
+        if (requester == null) {
+            doorStatusUpdateCallback.doorUnlockStatusUpdated("No user logged in!");
+            return;
+        }
+
         UnlockDoorRequest request = new UnlockDoorRequest(
                 httpManager,
                 doorToUnlock,
