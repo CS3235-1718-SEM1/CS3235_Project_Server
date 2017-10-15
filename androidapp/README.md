@@ -65,7 +65,7 @@ This is an alternative way of unlocking the door. There will be a NFC emitter in
 
 #### Fingerprint
 
-TODO
+The application will verify the fingerprint of the user, before proceeding to the next stage "Unlocking the Door".
 
 #### Unlocking the Door
 
