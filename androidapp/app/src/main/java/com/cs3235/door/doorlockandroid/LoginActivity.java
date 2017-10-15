@@ -161,6 +161,11 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    private String getPhoneUuid() {
+        // TODO: get proper phone uuid
+        return "";
+    }
+
     /**
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
@@ -188,8 +193,8 @@ public class LoginActivity extends AppCompatActivity {
                 return false;
             }
 
-            // TODO: Implement phoneuuid
-            SmartphoneCardLoginManager smartphoneCardManager = new SmartphoneCardLoginManager(httpManager, "");
+            SmartphoneCardLoginManager smartphoneCardManager =
+                    new SmartphoneCardLoginManager(httpManager, getPhoneUuid());
             SmartphoneCardLoginManager.SmartphoneCardLoginResult smartphoneDoorResult =
                     smartphoneCardManager.loginToSmartphoneCardSystem(ivleResult.user);
 
