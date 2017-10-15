@@ -71,7 +71,7 @@ The application will verify the fingerprint of the user, before proceeding to th
 
 Upon scanning the door and verifying the fingerprint, a request will be sent to the door unlocking server to unlock the door.
 
-* URL: `<pref_smartphoneCardServerUrl>/openDoor`
+* URL: `<pref_doorServerUrl>/openDoor`
 * HTTP method: `POST`
 * Parameters:
     * `IVLE_id`: IVLE id (matric number)
