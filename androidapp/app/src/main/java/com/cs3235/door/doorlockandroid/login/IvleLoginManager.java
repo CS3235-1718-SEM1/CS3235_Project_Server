@@ -6,7 +6,7 @@ public class IvleLoginManager {
     private final HttpManager httpManager;
 
     // TODO: Replace with real authentication
-    private final User fakeUser = new User("studentmatric", "studentSecretKey");
+    private final User fakeUser = new User("studentmatric", "studentIvleToken");
     private final String fakeUserPassword = "password";
 
     public IvleLoginManager(HttpManager httpManager) {
