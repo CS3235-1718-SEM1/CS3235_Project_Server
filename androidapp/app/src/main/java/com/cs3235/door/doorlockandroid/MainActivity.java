@@ -17,6 +17,7 @@ import com.cs3235.door.doorlockandroid.door.DoorUnlocker;
 import com.cs3235.door.doorlockandroid.door.ScannedDoorDetails;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
 import com.cs3235.door.doorlockandroid.login.User;
+import com.cs3235.door.doorlockandroid.nfc.NfcManager;
 import com.cs3235.door.doorlockandroid.settings.SettingsManager;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -79,7 +80,13 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
 
             if (NfcAdapter.getDefaultAdapter(getApplicationContext()) != null) {
                 if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
-                    handleNfcIntent(intent);
+                    lastScannedDoor = NfcManager.handleNfcNdefDiscoveredIntent(intent);
+
+                    if (lastScannedDoor != null) {
+                        activateFingerprintActivity();
+                    } else {
+                        spawnToastMessage("Unrecognized NFC tag!");
+                    }
                 }
             }
         }
@@ -98,22 +105,7 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         }
     }
 
-    private void handleNfcIntent(Intent intent) {
-        // TODO: Probably invent a better protocol?
-        Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
 
-        if (rawMessages != null && rawMessages.length >= 1) {
-            // just check the first packet
-            NdefMessage ndefMessage = (NdefMessage)rawMessages[0];
-
-            if (ndefMessage.getRecords().length >= 1) {
-                NdefRecord ndefRecord = ndefMessage.getRecords()[0];
-
-                lastScannedDoor = ScannedDoorDetails.createDoorDetailsFromNfc(ndefRecord.toUri().toString());
-                activateFingerprintActivity();
-            }
-        }
-    }
 
     private void handleFingerprintActivityResult(int resultCode) {
         if (resultCode == RESULT_OK) {
