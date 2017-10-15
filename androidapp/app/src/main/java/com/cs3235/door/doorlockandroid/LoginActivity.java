@@ -213,6 +213,7 @@ public class LoginActivity extends AppCompatActivity {
 
             if (!smartphoneDoorResult.successful) {
                 errorMessage = smartphoneDoorResult.failureMessage;
+                return false;
             }
 
             loggedInUser = smartphoneDoorResult.user;
