@@ -1,15 +1,19 @@
 from flask import Flask
 from flask import request
 from flask import send_from_directory
+import base64
 
 import pyotp
 
 app = Flask(__name__, static_url_path='/static')
 
 studentDir = {}
-studentDir["student_matric"] = "studentSecretKey"
+studentDir["studentmatric"] = base64.b32encode("studentmatric".encode())
+#studentDir["studentmatric"] = "studentmatric"
+print(studentDir["studentmatric"])
 doorDir = {}
-doorDir["com1-01-13"] = "doorSecretKey"
+doorDir["com1-01-qr"] = base64.b32encode("base32secret3232".encode())
+doorDir["com1-01-rfid"] = base64.b32encode("crackthisrfid".encode())
 
 @app.route("/")
 def hello():
@@ -49,7 +53,8 @@ def validateRequest(data):
             if door.now() == data["door_token"]:
               openDoor(data["door_id"])
               return "Access Granted"
-    return "Access Denied"
+        
+    return "Access Denied "
 
 def openDoor(door):
     print("opening " + door)
