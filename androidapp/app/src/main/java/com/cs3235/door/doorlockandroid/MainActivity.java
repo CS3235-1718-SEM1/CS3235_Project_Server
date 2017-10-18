@@ -126,7 +126,11 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
             loggedInUser = User.createFromLoginResultIntent(data);
             loggedInUser.saveToSettings(settingsManager);
         } else {
-            spawnSnackbarMessage(data.getDataString());
+            if (data != null) {
+                spawnSnackbarMessage(data.getDataString());
+            } else {
+                spawnSnackbarMessage("Login cancelled");
+            }
         }
 
         refreshMessage();
