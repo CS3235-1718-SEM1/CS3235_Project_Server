@@ -31,9 +31,13 @@ import java.util.UUID;
 
 import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_PHONE_UUID_KEY;
 
+// TODO: Delete this activity
 /**
  * A login screen that offers login via email/password.
+ *
+ * @deprecated To be superseded by {@link IvleLoginActivity}
  */
+@Deprecated
 public class LoginActivity extends AppCompatActivity {
     /**
      * Keep track of the login task to ensure we can cancel it if requested.

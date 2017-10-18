@@ -7,6 +7,8 @@ import android.preference.PreferenceManager;
 public class SettingsManager {
     public static final String PREF_DOOR_SERVER_URL_KEY = "pref_doorServerUrl";
     public static final String PREF_SMARTPHONE_CARD_SERVER_URL_KEY = "pref_smartphoneCardServerUrl";
+    public static final String PREF_IVLE_LOGIN_URL = "pref_ivleLoginUrl";
+    public static final String PREF_IVLE_GET_ID_URL = "pref_ivleGetIdUrl";
 
     public static final String PREF_PHONE_UUID_KEY = "pref_phoneUuid";
 
