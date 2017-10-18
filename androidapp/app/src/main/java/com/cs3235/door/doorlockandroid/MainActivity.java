@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
     }
 
     public void onLoginClick(View view) {
-        Intent login = new Intent(this, LoginActivity.class);
+        Intent login = new Intent(this, IvleLoginActivity.class);
         startActivityForResult(login, LOGIN_REQUEST_CODE);
     }
 
@@ -125,9 +125,11 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         if (resultCode == RESULT_OK) {
             loggedInUser = User.createFromLoginResultIntent(data);
             loggedInUser.saveToSettings(settingsManager);
-
-            refreshMessage();
+        } else {
+            spawnSnackbarMessage(data.getDataString());
         }
+
+        refreshMessage();
     }
 
     private void handleQrScanActivityResult(int requestCode, int resultCode, Intent data) {
