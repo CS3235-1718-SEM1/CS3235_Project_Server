@@ -24,16 +24,20 @@ public class User {
         this.secretKey = secretKey;
     }
 
+    public String getUserOtp() {
+        Totp totp = new Totp(getBase32EncodedSecretKey());
+        return totp.now();
+    }
+
+    private String getBase32EncodedSecretKey() {
+        return BaseEncoding.base32().encode(secretKey.getBytes());
+    }
+
     public static User createFromLoginResultIntent(Intent loginIntentData) {
         return new User(
                 loginIntentData.getStringExtra(LoginResultIntentExtra.EXTRA_USER_MATRIC),
                 loginIntentData.getStringExtra(LoginResultIntentExtra.EXTRA_USER_IVLE_AUTH),
                 loginIntentData.getStringExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY));
-    }
-
-    public String getUserOtp() {
-        Totp totp = new Totp(getBase32EncodedSecretKey());
-        return totp.now();
     }
 
     /**
@@ -78,9 +82,5 @@ public class User {
         settingsManager.setString(LoginResultIntentExtra.EXTRA_USER_MATRIC, ivleId);
         settingsManager.setString(LoginResultIntentExtra.EXTRA_USER_IVLE_AUTH, ivleAuth);
         settingsManager.setString(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY, secretKey);
-    }
-
-    private String getBase32EncodedSecretKey() {
-        return BaseEncoding.base32().encode(secretKey.getBytes());
     }
 }
