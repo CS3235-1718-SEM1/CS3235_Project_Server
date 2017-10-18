@@ -45,6 +45,9 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         settingsManager = new SettingsManager(this);
         httpManager = new HttpManager(getApplicationContext(), settingsManager);
         doorUnlocker = new DoorUnlocker(httpManager, this);
+
+        loggedInUser = User.createFromSettings(settingsManager);
+        refreshMessage();
     }
 
     public void onSettingsClick(View view) {
@@ -121,6 +124,8 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
     private void handleLoginActivityResult(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             loggedInUser = User.createFromLoginResultIntent(data);
+            loggedInUser.saveToSettings(settingsManager);
+
             refreshMessage();
         }
     }
