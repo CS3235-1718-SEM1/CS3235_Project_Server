@@ -2,6 +2,8 @@ package com.cs3235.door.doorlockandroid.login;
 
 import android.content.Intent;
 
+import com.google.common.io.BaseEncoding;
+
 import org.jboss.aerogear.security.otp.Totp;
 
 public class User {
@@ -29,7 +31,7 @@ public class User {
     }
 
     public String getUserOtp() {
-        Totp totp = new Totp(secretKey);
+        Totp totp = new Totp(getBase32EncodedSecretKey());
         return totp.now();
     }
 
@@ -45,5 +47,9 @@ public class User {
         result.putExtra(LoginResultIntentExtra.EXTRA_USER_SECRET_KEY, secretKey);
 
         return result;
+    }
+
+    private String getBase32EncodedSecretKey() {
+        return BaseEncoding.base32().encode(secretKey.getBytes());
     }
 }
