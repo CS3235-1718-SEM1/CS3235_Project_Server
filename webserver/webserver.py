@@ -54,7 +54,7 @@ def validateRequest(data):
               openDoor(data["door_id"])
               return "Access Granted"
         
-    return "Access Denied "
+    return "Access Denied"
 
 def openDoor(door):
     print("opening " + door)
