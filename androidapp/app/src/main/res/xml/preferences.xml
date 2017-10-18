@@ -11,4 +11,10 @@
         android:title="Door Server Url"
         android:defaultValue="@string/local_host_ip"
         android:summary="Sets the URl to the door server"/>
+
+    <EditTextPreference
+        android:key="pref_ivleLoginUrl"
+        android:title="IVLE login Url"
+        android:defaultValue="@string/ivle_login_default_url"
+        android:summary="Sets the URl to the ivle login (excluding &amp;url=[])"/>
 </PreferenceScreen>

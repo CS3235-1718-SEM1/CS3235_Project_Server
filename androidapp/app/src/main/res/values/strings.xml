@@ -16,4 +16,5 @@
     </string>
     <string name="title_activity_fingerprint">FingerprintActivity</string>
     <string name="local_host_ip">http://127.0.0.1:5000</string>
+    <string name="ivle_login_default_url">https://ivle.nus.edu.sg/api/login/?%1</string>
 </resources>
