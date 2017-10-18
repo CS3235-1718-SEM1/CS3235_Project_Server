@@ -2,18 +2,23 @@ from flask import Flask
 from flask import request
 from flask import send_from_directory
 import base64
-
+import requests
 import pyotp
+import simplejson as json
 
 app = Flask(__name__, static_url_path='/static')
 
-studentDir = {}
-studentDir["studentmatric"] = base64.b32encode("studentmatric".encode())
-#studentDir["studentmatric"] = "studentmatric"
-print(studentDir["studentmatric"])
+# studentDir = {}
+# studentDir["studentmatric"] = base64.b32encode("studentmatric".encode())
+# #studentDir["studentmatric"] = "studentmatric"
+# print(studentDir["studentmatric"])
 doorDir = {}
 doorDir["com1-01-qr"] = base64.b32encode("base32secret3232".encode())
 doorDir["com1-01-rfid"] = base64.b32encode("crackthisrfid".encode())
+
+url = 'https://morning-springs-84372.herokuapp.com/can_access_door'
+headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+
 
 @app.route("/")
 def hello():
@@ -36,25 +41,33 @@ def openDoor():
 
 def validateRequest(data):
     if data['door_id'] == "" or data['IVLE_id'] == None:
-        return "Invalid Door id"
+        return "Missing Door id"
     if data['door_token'] == "" or data['door_token'] == None:
-        return "Invalid Door Token" 
+        return "Missing Door Token" 
     if data['IVLE_id'] == "" or data['IVLE_id'] == None:
-        return "Invalid IVLE id"
+        return "Missing IVLE id"
     if data['IVLE_token'] == "" or data['IVLE_token'] == None:
-        return "Invalid IVLE token"
+        return "Missing IVLE token"
 
-    if data["IVLE_id"] in studentDir and data["door_id"] in doorDir:
-        stu_otp_token = studentDir[data["IVLE_id"]]
+    if data["door_id"] in doorDir
         door_otp_token = doorDir[data["door_id"]]
-        student = pyotp.TOTP(stu_otp_token)
         door = pyotp.TOTP(door_otp_token)
-        if student.now() == data["IVLE_token"]:
-            if door.now() == data["door_token"]:
-              openDoor(data["door_id"])
-              return "Access Granted"
-        
+        if door.now() == data["door_token"]:
+            if queryServer(data):
+                openDoor(data["door_id"])
+                return "Access Granted"
     return "Access Denied "
+
+def queryServer(data):
+    try:
+        package = {'door_id': data["door_id"], 'IVLE_id': data["IVLE_id"], 'otp': data['IVLE_token']}
+        r = requests.post(url, data=json.dumps(package), headers=headers)
+        print(r.status_code)
+        if r.status_code is 200:
+            return True
+    except Exception:
+        print("Unable to parse request form android")
+    return False
 
 def openDoor(door):
     print("opening " + door)
