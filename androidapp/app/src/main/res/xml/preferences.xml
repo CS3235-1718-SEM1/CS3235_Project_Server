@@ -17,4 +17,10 @@
         android:title="IVLE login Url"
         android:defaultValue="@string/ivle_login_default_url"
         android:summary="Sets the URl to the ivle login (excluding &amp;url=[])"/>
+
+    <EditTextPreference
+        android:key="pref_ivleGetIdUrl"
+        android:title="IVLE Get_Id Url"
+        android:defaultValue="@string/ivle_getid_default_url"
+        android:summary="Sets the URl to the ivle get id (excluding &amp;token=[])"/>
 </PreferenceScreen>
