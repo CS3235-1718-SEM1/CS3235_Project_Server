@@ -25,15 +25,15 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
+
+
     compile 'com.android.support:appcompat-v7:26.+'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.android.support:design:26.+'
     compile 'com.journeyapps:zxing-android-embedded:3.5.0'
     compile 'com.android.volley:volley:1.0.0'
     compile 'org.jboss.aerogear:aerogear-otp-java:1.0.0'
-
     compile 'com.google.guava:guava:23.2-android'
     compile 'com.google.code.findbugs:jsr305:2.0.1'
-
     testCompile 'junit:junit:4.12'
 }
