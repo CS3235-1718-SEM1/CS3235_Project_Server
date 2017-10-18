@@ -45,6 +45,9 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         settingsManager = new SettingsManager(this);
         httpManager = new HttpManager(getApplicationContext(), settingsManager);
         doorUnlocker = new DoorUnlocker(httpManager, this);
+
+        loggedInUser = User.createFromSettings(settingsManager);
+        refreshMessage();
     }
 
     public void onSettingsClick(View view) {
@@ -53,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
     }
 
     public void onLoginClick(View view) {
-        Intent login = new Intent(this, LoginActivity.class);
+        Intent login = new Intent(this, IvleLoginActivity.class);
         startActivityForResult(login, LOGIN_REQUEST_CODE);
     }
 
@@ -121,8 +124,16 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
     private void handleLoginActivityResult(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             loggedInUser = User.createFromLoginResultIntent(data);
-            refreshMessage();
+            loggedInUser.saveToSettings(settingsManager);
+        } else {
+            if (data != null) {
+                spawnSnackbarMessage(data.getDataString());
+            } else {
+                spawnSnackbarMessage("Login cancelled");
+            }
         }
+
+        refreshMessage();
     }
 
     private void handleQrScanActivityResult(int requestCode, int resultCode, Intent data) {
