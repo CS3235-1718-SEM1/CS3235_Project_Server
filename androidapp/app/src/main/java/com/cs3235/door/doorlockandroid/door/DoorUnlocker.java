@@ -2,11 +2,15 @@ package com.cs3235.door.doorlockandroid.door;
 
 import android.widget.Toast;
 
+import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
 import com.cs3235.door.doorlockandroid.https.UnlockDoorRequest;
 import com.cs3235.door.doorlockandroid.login.User;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class DoorUnlocker {
     private static final String ACCESS_GRANTED_MESSAGE = "Access Granted";
@@ -21,6 +25,7 @@ public class DoorUnlocker {
         this.doorStatusUpdateCallback = resultCallback;
     }
 
+    // TODO: Refactor: This needs to be async!
     public void unlockDoor(ScannedDoorDetails doorToUnlock, User requester) {
         final String doorId = doorToUnlock.id;
 
@@ -29,42 +34,34 @@ public class DoorUnlocker {
             return;
         }
 
-        UnlockDoorRequest request = new UnlockDoorRequest(
-                httpManager,
-                doorToUnlock,
-                requester,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        String newStatus = "";
+        Map<String, String> requestParams = new HashMap<>();
+        requestParams.put("door_id", doorToUnlock.id);
+        requestParams.put("door_token", doorToUnlock.otpToken);
+        requestParams.put("IVLE_id", requester.ivleId);
+        requestParams.put("IVLE_token", requester.getUserOtp());
 
-                        switch (response) {
-                            case ACCESS_GRANTED_MESSAGE:
-                                newStatus = "Welcome to " + doorId;
-                                break;
+        HttpManager.RequestResult<String> requestResult = httpManager.sendNewStringRequest(
+                Request.Method.POST,
+                httpManager.getDoorServerUrl() + "/openDoor",
+                requestParams,
+                HttpManager.DEFAULT_TIMEOUT,
+                HttpManager.DEFAULT_RETRY_INTERVAL);
 
-                            case ACCESS_DENIED_MESSAGE:
-                                newStatus = "USER DOES NOT HAVE ACCESS TO DOOR";
-                                break;
+        String newStatus = "";
+        switch (requestResult.getResponse()) {
+            case ACCESS_GRANTED_MESSAGE:
+                newStatus = "Welcome to " + doorId;
+                break;
 
-                            default:
-                                newStatus = "Fail: Server sent unrecognized message. " + response;
-                                break;
-                        }
+            case ACCESS_DENIED_MESSAGE:
+                newStatus = "USER DOES NOT HAVE ACCESS TO DOOR";
+                break;
 
-                        doorStatusUpdateCallback.doorUnlockStatusUpdated(newStatus);
-                    }
-                },
+            default:
+                newStatus = "Fail to open door: " + requestResult.getResponse();
+                break;
+        }
 
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        String newStatus = "Fail to connect to server - " + error.getMessage();
-                        doorStatusUpdateCallback.doorUnlockStatusUpdated(newStatus);
-                    }
-                }
-        );
-
-        httpManager.sendNewHttpRequest(request);
+        doorStatusUpdateCallback.doorUnlockStatusUpdated(newStatus);
     }
 }
