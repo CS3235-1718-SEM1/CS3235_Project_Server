@@ -11,6 +11,7 @@ while True:
     currPass = totp.now()
     if currPass != lastPass:
         print("currently showing :", door_id + "," + currPass)
+        string = ""
         string = door_id+","+currPass+'\n'
         ser.write(string.encode())
     lastPass = currPass

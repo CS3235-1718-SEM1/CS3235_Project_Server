@@ -19,7 +19,6 @@ doorDir["com1-01-rfid"] = base64.b32encode("crackthisrfid".encode())
 url = 'https://morning-springs-84372.herokuapp.com/can_access_door'
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
-
 @app.route("/")
 def hello():
     return send_from_directory('static', 'index.html')
@@ -49,7 +48,7 @@ def validateRequest(data):
     if data['IVLE_token'] == "" or data['IVLE_token'] == None:
         return "Missing IVLE token"
 
-    if data["door_id"] in doorDir
+    if data["door_id"] in doorDir:
         door_otp_token = doorDir[data["door_id"]]
         door = pyotp.TOTP(door_otp_token)
         if door.now() == data["door_token"]:
@@ -70,7 +69,23 @@ def queryServer(data):
     return False
 
 def openDoor(door):
+    if door == "com1-01-rfid":
+        r = requests.get('http://192.168.43.128:9999/rfidDoorOpen')
+    elif door == "com1-01-qr":
+        r = requests.get('http://192.168.43.128:9999/qrDoorOpen')
     print("opening " + door)
+
+
+# DEBUGGING CODE :: comment out when not in use
+# @app.route("/rfid")
+# def rfidOverride():
+#     openDoor("com1-01-rfid")
+#     return "200"
+# @app.route("/qr")
+# def qrOverride():
+#     openDoor("com1-01-qr")
+#     return "200"
+
 
 if __name__ == '__main__':
     app.run(host= '0.0.0.0', port=5000)
