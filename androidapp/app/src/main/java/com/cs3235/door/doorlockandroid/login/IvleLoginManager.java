@@ -1,9 +1,9 @@
 package com.cs3235.door.doorlockandroid.login;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
+import com.android.volley.Request;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
-import com.cs3235.door.doorlockandroid.https.IvleObtainIdRequest;
+
+import java.util.HashMap;
 
 public class IvleLoginManager {
     private final String LOGIN_STILL_LOADING = "Still loading...";
@@ -35,81 +35,36 @@ public class IvleLoginManager {
         return new IvleLoginResult("Unrecognized user name or password");
     }
 
-    // TODO: Refactor this, too similar to SmartphoneCardLoginManager's loginToSmartphoneCardSystem()
     public IvleLoginResult getUserWithAuthToken(final String ivleAuthToken) {
-        final IvleLoginResult result = new IvleLoginResult(LOGIN_STILL_LOADING);
+        HttpManager.RequestResult<String> requestResult = httpManager.sendNewStringRequest(
+                Request.Method.POST,
+                httpManager.getIvleUserGetIdUrl() + "&Token=" + ivleAuthToken,
+                new HashMap<String, String>(),
+                HttpManager.DEFAULT_TIMEOUT,
+                HttpManager.DEFAULT_RETRY_INTERVAL);
 
-        // set up the request
-        IvleObtainIdRequest request = new IvleObtainIdRequest(
-                httpManager,
-                ivleAuthToken,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
+        IvleLoginResult ivleResult = new IvleLoginResult("");
+        if (!requestResult.isSuccessful()) {
+            ivleResult.setFailure(requestResult.getFailureMessage());
+        } else {
+            String response = requestResult.getResponse();
 
-                        if (response.equals("\"\"")) {
-                            synchronized (result) {
-                                result.setFailure("Invalid auth token");
-                            }
-                        } else if (response.startsWith("\"") && response.endsWith("\"")) {
-                            synchronized (result) {
-                                // id is surrounded with quotes, strip both of them off
-                                String userId = response.substring(1, response.length() - 1);
+            if (response.equals("\"\"")) {
+                ivleResult.setFailure("Invalid auth token");
+            } else if (response.startsWith("\"") && response.endsWith("\"")) {
 
-                                result.setSuccessful(new User(userId, ivleAuthToken));
-                            }
-                        } else {
-                            synchronized (result) {
-                                result.setFailure("Invalid app token or server is down.");
-                            }
-                        }
-                    }
-                },
-
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        synchronized (result) {
-                            result.setFailure("Fail to connect to server.");
-                        }
-                    }
-                }
-        );
-
-        // dispatch the request
-        httpManager.sendNewHttpRequest(request);
-
-        // wait for http request to send, and set appropriate error message if the attempt failed
-        try {
-            int pollInterval = 500;
-            int timeOut = 10000;
-            for (int i = 0; i < (timeOut / pollInterval); i++) {
-                Thread.sleep(pollInterval);
-
-                synchronized (result) {
-                    // TODO: Add a variable inside SmartphoneCardLoginResult to facilitate loading
-                    // Otherwise we can only depend on SMARTPHONE_STILL_LOADING!
-                    if (!result.failureMessage.equals(LOGIN_STILL_LOADING)) {
-                        break;
-                    }
-                }
-            }
-
-            synchronized (result) {
-                if (!result.successful && result.failureMessage.equals(LOGIN_STILL_LOADING)) {
-                    result.setFailure("Server took way too long to response. Timed out.");
-                }
-            }
-
-        } catch (InterruptedException e) {
-            synchronized (result) {
-                result.setFailure("Access to IVLE server was interrupted.");
+                // id is surrounded with quotes, strip both of them off
+                String userId = response.substring(1, response.length() - 1);
+                ivleResult.setSuccessful(new User(userId, ivleAuthToken));
+            } else {
+                ivleResult.setFailure("Invalid app token or server is down.");
             }
         }
 
-        return result;
+        return ivleResult;
     }
 
+    // TODO: Tidy this class up
     /**
      * Possible outcomes of {@link #loginToIvle(String, String)}.
      */

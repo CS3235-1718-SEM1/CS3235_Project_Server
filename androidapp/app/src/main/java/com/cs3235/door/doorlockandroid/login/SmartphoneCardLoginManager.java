@@ -1,14 +1,14 @@
 package com.cs3235.door.doorlockandroid.login;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
+import com.android.volley.Request;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
-import com.cs3235.door.doorlockandroid.https.SmartphoneCardLoginRequest;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SmartphoneCardLoginManager {
     private static final String SMARTPHONE_VALID_MESSAGE_PREFIX = "Smartphone Valid";
     private static final String SMARTPHONE_INVALID_MESSAGE = "Smartphone Invalid";
-    private static final String SMARTPHONE_STILL_LOADING = "Still loading...";
 
     private final HttpManager httpManager;
     private final String phoneUuid;
@@ -19,77 +19,35 @@ public class SmartphoneCardLoginManager {
     }
 
     public SmartphoneCardLoginResult loginToSmartphoneCardSystem(final User ivleUser) {
-        final SmartphoneCardLoginResult result = new SmartphoneCardLoginResult();
-        result.setFailure(SMARTPHONE_STILL_LOADING);
+        Map<String, String> params = new HashMap<>();
+        params.put("IVLE_id", ivleUser.ivleId);
+        params.put("IVLE_auth", ivleUser.ivleAuth);
+        params.put("uuid_id", phoneUuid);
 
-        // set up the request
-        SmartphoneCardLoginRequest request = new SmartphoneCardLoginRequest(
-                httpManager,
-                ivleUser,
-                phoneUuid,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
+        HttpManager.RequestResult<String> requestResult = httpManager.sendNewStringRequest(
+                Request.Method.POST,
+                httpManager.getSmartphoneServerUrl() + "/validateSmartphone",
+                params,
+                HttpManager.DEFAULT_TIMEOUT,
+                HttpManager.DEFAULT_RETRY_INTERVAL);
 
-                        if (response.equals(SMARTPHONE_INVALID_MESSAGE)) {
-                            synchronized (result) {
-                                result.setFailure("User is not tied to phone.");
-                            }
-                        } else if (response.startsWith(SMARTPHONE_VALID_MESSAGE_PREFIX)) {
-                            synchronized (result) {
-                                String secretKey = response.substring(SMARTPHONE_VALID_MESSAGE_PREFIX.length()).trim();
-                                result.setSuccessful(new User(ivleUser.ivleId, ivleUser.ivleAuth, secretKey));
-                            }
-                        } else {
-                            synchronized (result) {
-                                result.setFailure("Smartphone server returns unknown message (error in protocol?).");
-                            }
-                        }
-                    }
-                },
+        SmartphoneCardLoginResult result = new SmartphoneCardLoginResult();
 
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        synchronized (result) {
-                            result.setFailure("Fail to connect to server.");
-                        }
-                    }
-                }
-        );
+        if (!requestResult.isSuccessful()) {
+            result.setFailure(requestResult.getFailureMessage());
+        } else {
+            String response = requestResult.getResponse();
 
-        // dispatch the request
-        httpManager.sendNewHttpRequest(request);
-
-        // wait for http request to send, and set appropriate error message if the attempt failed
-        try {
-            int pollInterval = 500;
-            int timeOut = 10000;
-            for (int i = 0; i < (timeOut / pollInterval); i++) {
-                Thread.sleep(pollInterval);
-
-                synchronized (result) {
-                    // TODO: Add a variable inside SmartphoneCardLoginResult to facilitate loading
-                    // Otherwise we can only depend on SMARTPHONE_STILL_LOADING!
-                    if (!result.failureMessage.equals(SMARTPHONE_STILL_LOADING)) {
-                        break;
-                    }
-                }
-            }
-
-            synchronized (result) {
-                if (!result.successful && result.failureMessage.equals(SMARTPHONE_STILL_LOADING)) {
-                    result.setFailure("Server took way too long to response. Timed out.");
-                }
-            }
-
-        } catch (InterruptedException e) {
-            synchronized (result) {
-                result.setFailure("Access to smartphone door server was interrupted.");
+            if (response.equals(SMARTPHONE_INVALID_MESSAGE)) {
+                result.setFailure("User is not tied to phone.");
+            } else if (response.startsWith(SMARTPHONE_VALID_MESSAGE_PREFIX)) {
+                String secretKey = response.substring(SMARTPHONE_VALID_MESSAGE_PREFIX.length()).trim();
+                result.setSuccessful(new User(ivleUser.ivleId, ivleUser.ivleAuth, secretKey));
+            } else {
+                result.setFailure("Smartphone server returns unknown message (error in protocol?).");
             }
         }
 
-        // return the result
         return result;
     }
 
