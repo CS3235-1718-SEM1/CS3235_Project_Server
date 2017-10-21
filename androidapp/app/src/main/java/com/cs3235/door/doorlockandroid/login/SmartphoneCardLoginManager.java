@@ -3,8 +3,8 @@ package com.cs3235.door.doorlockandroid.login;
 import com.android.volley.Request;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class SmartphoneCardLoginManager {
     private static final String SMARTPHONE_VALID_MESSAGE_PREFIX = "Smartphone Valid";
@@ -19,36 +19,41 @@ public class SmartphoneCardLoginManager {
     }
 
     public SmartphoneCardLoginResult loginToSmartphoneCardSystem(final User ivleUser) {
-        Map<String, String> params = new HashMap<>();
-        params.put("IVLE_id", ivleUser.ivleId);
-        params.put("IVLE_auth", ivleUser.ivleAuth);
-        params.put("uuid_id", phoneUuid);
 
-        HttpManager.RequestResult<String> requestResult = httpManager.sendNewStringRequest(
-                Request.Method.POST,
-                httpManager.getSmartphoneServerUrl() + "/validateSmartphone",
-                params,
-                HttpManager.DEFAULT_TIMEOUT,
-                HttpManager.DEFAULT_RETRY_INTERVAL);
+        try {
+            JSONObject params = new JSONObject();
+            params.put("IVLE_id", ivleUser.ivleId);
+            params.put("IVLE_auth", ivleUser.ivleAuth);
 
-        SmartphoneCardLoginResult result = new SmartphoneCardLoginResult();
+            HttpManager.RequestResult<JSONObject> requestResult = httpManager.sendNewJsonRequest(
+                    Request.Method.POST,
+                    httpManager.getSmartphoneServerUrl() + "/registerUser",
+                    params,
+                    HttpManager.DEFAULT_TIMEOUT,
+                    HttpManager.DEFAULT_RETRY_INTERVAL);
 
-        if (!requestResult.isSuccessful()) {
-            result.setFailure(requestResult.getFailureMessage());
-        } else {
-            String response = requestResult.getResponse();
+            SmartphoneCardLoginResult result = new SmartphoneCardLoginResult();
 
-            if (response.equals(SMARTPHONE_INVALID_MESSAGE)) {
-                result.setFailure("User is not tied to phone.");
-            } else if (response.startsWith(SMARTPHONE_VALID_MESSAGE_PREFIX)) {
-                String secretKey = response.substring(SMARTPHONE_VALID_MESSAGE_PREFIX.length()).trim();
-                result.setSuccessful(new User(ivleUser.ivleId, ivleUser.ivleAuth, secretKey));
+            if (!requestResult.isSuccessful()) {
+                result.setFailure(requestResult.getFailureMessage());
             } else {
-                result.setFailure("Smartphone server returns unknown message (error in protocol?).");
-            }
-        }
+                boolean jsonSuccess = requestResult.getResponse().getBoolean("success");
 
-        return result;
+                if (jsonSuccess) {
+                    result.setFailure("User is not tied to phone.");
+                } else {
+                    String secretKey = requestResult.getResponse().getString("secret_key");
+                    result.setSuccessful(new User(ivleUser.ivleId, ivleUser.ivleAuth, secretKey));
+                }
+            }
+
+            return result;
+
+        } catch (JSONException ex) {
+            SmartphoneCardLoginResult errorResult = new SmartphoneCardLoginResult();
+            errorResult.setFailure("JSONException: " + ex.getMessage());
+            return errorResult;
+        }
     }
 
     /**
