@@ -1,6 +1,8 @@
 package com.cs3235.door.doorlockandroid;
 
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -36,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
     private SettingsManager settingsManager;
     private HttpManager httpManager;
     private DoorUnlocker doorUnlocker;
+    private NfcAdapter nfcAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,8 +49,22 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         httpManager = new HttpManager(getApplicationContext(), settingsManager);
         doorUnlocker = new DoorUnlocker(httpManager, this);
 
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+
         loggedInUser = User.createFromSettings(settingsManager);
         refreshMessage();
+    }
+
+    @Override
+    protected void onResume() {
+        enableNfcDetection();
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        disableNfcDetection();
+        super.onPause();
     }
 
     public void onSettingsClick(View view) {
@@ -82,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         if (intent != null) {
 
             if (NfcAdapter.getDefaultAdapter(getApplicationContext()) != null) {
+                spawnToastMessage("Discovered NFC");
                 if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
                     lastScannedDoor = NfcManager.handleNfcNdefDiscoveredIntent(intent);
 
@@ -151,6 +169,29 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         }
 
         refreshMessage();
+    }
+
+    private void enableNfcDetection() {
+        if (nfcAdapter == null) {
+            return;
+        }
+
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                intent, 0);
+        IntentFilter[] intentFilters = new IntentFilter[] {};
+
+        nfcAdapter.enableForegroundDispatch(this, pendingIntent, intentFilters, null);
+    }
+
+    private void disableNfcDetection() {
+        if (nfcAdapter == null) {
+            return;
+        }
+        
+        nfcAdapter.disableForegroundDispatch(this);
     }
 
     private void spawnToastMessage(String text) {
