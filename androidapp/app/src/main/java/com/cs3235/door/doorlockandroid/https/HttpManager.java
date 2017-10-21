@@ -6,8 +6,11 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.cs3235.door.doorlockandroid.settings.SettingsManager;
+
+import org.json.JSONObject;
 
 import java.util.Map;
 
@@ -43,6 +46,66 @@ public class HttpManager {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+                        synchronized (requestResult) {
+                            requestResult.setSuccessful(response);
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        synchronized (requestResult) {
+                            requestResult.setFailure(error.getMessage());
+                        }
+                    }
+                }
+        );
+
+        // dispatch the request
+        httpRequestQueue.add(request);
+
+        // wait until we either receive the request or timeout
+        try {
+            for (int i = 0; i < (timeOut / retryInterval); i++) {
+
+                synchronized (requestResult) {
+                    if (!requestResult.isStillLoading()) {
+                        break;
+                    }
+                }
+
+                Thread.sleep(retryInterval);
+            }
+
+            synchronized (requestResult) {
+                if (!requestResult.isStillLoading()) {
+                    requestResult.setFailure(HTTP_RESPONSE_TIMEOUT);
+                }
+            }
+
+        } catch (InterruptedException e) {
+            synchronized (requestResult) {
+                requestResult.setFailure(HTTP_RESPONSE_WAIT_CANCELLED);
+            }
+        }
+
+        return requestResult;
+    }
+
+    public RequestResult<JSONObject> sendNewJsonRequest(int httpMethod, String url,
+                                                        JSONObject params,
+                                                        int timeOut, int retryInterval) {
+
+        final RequestResult<JSONObject> requestResult = new RequestResult<>();
+
+        // create a new http json request
+        JsonObjectRequest request = new JsonObjectRequest(
+                httpMethod,
+                url,
+                params,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
                         synchronized (requestResult) {
                             requestResult.setSuccessful(response);
                         }
