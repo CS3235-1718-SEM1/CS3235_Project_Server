@@ -26,7 +26,6 @@ public class DoorUnlocker {
         this.doorStatusUpdateCallback = resultCallback;
     }
 
-    // TODO: Refactor: This needs to be async!
     public void unlockDoor(ScannedDoorDetails doorToUnlock, User requester) {
         final String doorId = doorToUnlock.id;
 
