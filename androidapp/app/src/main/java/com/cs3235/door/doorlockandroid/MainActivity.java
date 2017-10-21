@@ -1,6 +1,8 @@
 package com.cs3235.door.doorlockandroid;
 
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NdefMessage;
@@ -40,6 +42,9 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
     private DoorUnlocker doorUnlocker;
     private NfcAdapter nfcAdapter;
 
+    private BroadcastReceiver nfcAdapterStateChangedReceiver;
+    private boolean nfcEnabled = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,7 +56,28 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
 
+        if (nfcAdapter == null) {
+            nfcEnabled = false;
+        } else {
+            nfcEnabled = nfcAdapter.isEnabled();
+        }
+
         loggedInUser = User.createFromSettings(settingsManager);
+
+        nfcAdapterStateChangedReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED)) {
+                    nfcEnabled = nfcAdapter.isEnabled();
+
+                    if (nfcEnabled) enableNfcDetection();
+                    else disableNfcDetection();
+
+                    refreshMessage();
+                }
+            }
+        };
+
         refreshMessage();
     }
 
@@ -59,12 +85,14 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
     protected void onResume() {
         enableNfcDetection();
         super.onResume();
+        addNfcStatusReceiver();
     }
 
     @Override
     protected void onPause() {
         disableNfcDetection();
         super.onPause();
+        removeNfcStatusReceiver();
     }
 
     public void onSettingsClick(View view) {
@@ -190,8 +218,17 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         if (nfcAdapter == null) {
             return;
         }
-        
+
         nfcAdapter.disableForegroundDispatch(this);
+    }
+
+    private void addNfcStatusReceiver() {
+        IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
+        this.registerReceiver(nfcAdapterStateChangedReceiver, filter);
+    }
+
+    private void removeNfcStatusReceiver() {
+        this.unregisterReceiver(nfcAdapterStateChangedReceiver);
     }
 
     private void spawnToastMessage(String text) {
@@ -207,6 +244,7 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
 
     private void refreshMessage() {
         updateMessageText(constructMessageText());
+        updateNfcText();
     }
 
     private String constructMessageText() {
@@ -228,5 +266,10 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
     private void updateMessageText(String newMessageText) {
         TextView textView = (TextView) findViewById(R.id.message);
         textView.setText(newMessageText);
+    }
+
+    private void updateNfcText() {
+        TextView textView = (TextView) findViewById(R.id.nfcstatus);
+        textView.setText(nfcEnabled ? "Nfc is enabled" : "Nfc is DISABLED - Enable it to scan.");
     }
 }
