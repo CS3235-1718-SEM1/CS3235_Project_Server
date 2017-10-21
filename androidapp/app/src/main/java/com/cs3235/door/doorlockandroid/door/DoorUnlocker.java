@@ -1,5 +1,6 @@
 package com.cs3235.door.doorlockandroid.door;
 
+import android.os.AsyncTask;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -34,34 +35,56 @@ public class DoorUnlocker {
             return;
         }
 
-        Map<String, String> requestParams = new HashMap<>();
-        requestParams.put("door_id", doorToUnlock.id);
-        requestParams.put("door_token", doorToUnlock.otpToken);
-        requestParams.put("IVLE_id", requester.ivleId);
-        requestParams.put("IVLE_token", requester.getUserOtp());
+        new UnlockDoorAsyncTask(doorToUnlock, requester).execute();
+    }
 
-        HttpManager.RequestResult<String> requestResult = httpManager.sendNewStringRequest(
-                Request.Method.POST,
-                httpManager.getDoorServerUrl() + "/openDoor",
-                requestParams,
-                HttpManager.DEFAULT_TIMEOUT,
-                HttpManager.DEFAULT_RETRY_INTERVAL);
+    private class UnlockDoorAsyncTask extends AsyncTask<String, Integer, String> {
 
-        String newStatus = "";
-        switch (requestResult.getResponse()) {
-            case ACCESS_GRANTED_MESSAGE:
-                newStatus = "Welcome to " + doorId;
-                break;
+        private ScannedDoorDetails doorToUnlock;
+        private User requester;
 
-            case ACCESS_DENIED_MESSAGE:
-                newStatus = "USER DOES NOT HAVE ACCESS TO DOOR";
-                break;
-
-            default:
-                newStatus = "Fail to open door: " + requestResult.getResponse();
-                break;
+        public UnlockDoorAsyncTask(ScannedDoorDetails doorToUnlock, User requester) {
+            this.doorToUnlock = doorToUnlock;
+            this.requester = requester;
         }
 
-        doorStatusUpdateCallback.doorUnlockStatusUpdated(newStatus);
+        @Override
+        protected String doInBackground(String... strings) {
+            Map<String, String> requestParams = new HashMap<>();
+            requestParams.put("door_id", doorToUnlock.id);
+            requestParams.put("door_token", doorToUnlock.otpToken);
+            requestParams.put("IVLE_id", requester.ivleId);
+            requestParams.put("IVLE_token", requester.getUserOtp());
+
+            HttpManager.RequestResult<String> requestResult = httpManager.sendNewStringRequest(
+                    Request.Method.POST,
+                    httpManager.getDoorServerUrl() + "/openDoor",
+                    requestParams,
+                    HttpManager.DEFAULT_TIMEOUT,
+                    HttpManager.DEFAULT_RETRY_INTERVAL);
+
+            String newStatus = "";
+
+            if (requestResult == null || requestResult.getResponse() == null) {
+                return "Unable to access server.";
+            }
+
+            switch (requestResult.getResponse()) {
+                case ACCESS_GRANTED_MESSAGE:
+                    return "Welcome to " + doorToUnlock.id;
+
+                case ACCESS_DENIED_MESSAGE:
+                    return "USER DOES NOT HAVE ACCESS TO DOOR";
+
+                default:
+                    return "Fail to open door: " + requestResult.getResponse();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            doorStatusUpdateCallback.doorUnlockStatusUpdated(result);
+        }
     }
+
 }
