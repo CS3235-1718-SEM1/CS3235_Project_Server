@@ -39,7 +39,7 @@ public class SmartphoneCardLoginManager {
             } else {
                 boolean jsonSuccess = requestResult.getResponse().getBoolean("success");
 
-                if (jsonSuccess) {
+                if (!jsonSuccess) {
                     result.setFailure("User is not tied to phone.");
                 } else {
                     String secretKey = requestResult.getResponse().getString("secret_key");
