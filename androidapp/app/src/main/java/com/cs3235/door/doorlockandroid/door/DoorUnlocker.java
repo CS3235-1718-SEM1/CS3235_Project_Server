@@ -34,56 +34,37 @@ public class DoorUnlocker {
             return;
         }
 
-        new UnlockDoorAsyncTask(doorToUnlock, requester).execute();
-    }
+        Map<String, String> requestParams = new HashMap<>();
+        requestParams.put("door_id", doorToUnlock.id);
+        requestParams.put("door_token", doorToUnlock.otpToken);
+        requestParams.put("IVLE_id", requester.ivleId);
+        requestParams.put("IVLE_token", requester.getUserOtp());
 
-    private class UnlockDoorAsyncTask extends AsyncTask<String, Integer, String> {
-
-        private ScannedDoorDetails doorToUnlock;
-        private User requester;
-
-        public UnlockDoorAsyncTask(ScannedDoorDetails doorToUnlock, User requester) {
-            this.doorToUnlock = doorToUnlock;
-            this.requester = requester;
-        }
-
-        @Override
-        protected String doInBackground(String... strings) {
-            Map<String, String> requestParams = new HashMap<>();
-            requestParams.put("door_id", doorToUnlock.id);
-            requestParams.put("door_token", doorToUnlock.otpToken);
-            requestParams.put("IVLE_id", requester.ivleId);
-            requestParams.put("IVLE_token", requester.getUserOtp());
-
-            HttpManager.RequestResult<String> requestResult = httpManager.sendNewStringRequest(
-                    Request.Method.POST,
-                    httpManager.getDoorServerUrl() + "/openDoor",
-                    requestParams,
-                    HttpManager.DEFAULT_TIMEOUT,
-                    HttpManager.DEFAULT_RETRY_INTERVAL);
-
-            String newStatus = "";
-
-            if (requestResult == null || !requestResult.isSuccessful()) {
-                return "Unable to access server.";
-            }
-
-            switch (requestResult.getResponse()) {
-                case ACCESS_GRANTED_MESSAGE:
-                    return "Welcome to " + doorToUnlock.id;
-
-                case ACCESS_DENIED_MESSAGE:
-                    return "USER DOES NOT HAVE ACCESS TO DOOR";
-
-                default:
-                    return "Fail to open door: " + requestResult.getResponse();
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            doorStatusUpdateCallback.doorUnlockStatusUpdated(result);
-        }
+        httpManager.sendNewStringRequestAsync(
+                Request.Method.POST,
+                httpManager.getDoorServerUrl() + "/openDoor",
+                requestParams,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        if (response.startsWith(ACCESS_GRANTED_MESSAGE)) {
+                            doorStatusUpdateCallback.doorUnlockStatusUpdated(
+                                    "Welcome to " + doorId);
+                        } else if (response.startsWith(ACCESS_DENIED_MESSAGE)) {
+                            doorStatusUpdateCallback.doorUnlockStatusUpdated(
+                                    "USER DOES NOT HAVE ACCESS TO DOOR");
+                        } else {
+                            doorStatusUpdateCallback.doorUnlockStatusUpdated(
+                                    "Fail to open door: " + response);
+                        }
+                    }
+                },
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String error) {
+                        doorStatusUpdateCallback.doorUnlockStatusUpdated(error);
+                    }
+                });
     }
 
 }
