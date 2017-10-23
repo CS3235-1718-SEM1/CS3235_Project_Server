@@ -24,6 +24,7 @@ public class HttpStringRequest extends StringRequest {
                              Response.Listener<String> listener,
                              Response.ErrorListener errorListener) {
         super(httpMethod, url, listener, errorListener);
+        this.params = params;
     }
 
     @Override
