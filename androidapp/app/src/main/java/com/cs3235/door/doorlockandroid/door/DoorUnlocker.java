@@ -64,7 +64,7 @@ public class DoorUnlocker {
 
             String newStatus = "";
 
-            if (requestResult == null || requestResult.getResponse() == null) {
+            if (requestResult == null || !requestResult.isSuccessful()) {
                 return "Unable to access server.";
             }
 
