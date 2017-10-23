@@ -27,7 +27,7 @@ public class SmartphoneCardLoginManager {
 
             HttpManager.RequestResult<JSONObject> requestResult = httpManager.sendNewJsonRequest(
                     Request.Method.POST,
-                    httpManager.getSmartphoneServerUrl() + "/registerUser",
+                    httpManager.getSmartphoneServerUrl(),
                     params,
                     HttpManager.DEFAULT_TIMEOUT,
                     HttpManager.DEFAULT_RETRY_INTERVAL);

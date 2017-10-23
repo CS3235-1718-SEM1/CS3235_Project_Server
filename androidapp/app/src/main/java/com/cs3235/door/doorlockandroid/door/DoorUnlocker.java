@@ -42,7 +42,7 @@ public class DoorUnlocker {
 
         httpManager.sendNewStringRequestAsync(
                 Request.Method.POST,
-                httpManager.getDoorServerUrl() + "/openDoor",
+                httpManager.getDoorServerUrl(),
                 requestParams,
                 new Response.Listener<String>() {
                     @Override

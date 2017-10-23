@@ -1,6 +1,7 @@
 package com.cs3235.door.doorlockandroid.login;
 
 import com.android.volley.Request;
+import com.android.volley.Response;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
 
 import java.util.HashMap;
@@ -35,33 +36,33 @@ public class IvleLoginManager {
         return new IvleLoginResult("Unrecognized user name or password");
     }
 
-    public IvleLoginResult getUserWithAuthToken(final String ivleAuthToken) {
-        HttpManager.RequestResult<String> requestResult = httpManager.sendNewStringRequest(
-                Request.Method.POST,
+    public void getUserWithAuthToken(final String ivleAuthToken,
+                                                final IvleLoginResultCallback callback) {
+        httpManager.sendNewStringRequestAsync(
+                Request.Method.GET,
                 httpManager.getIvleUserGetIdUrl() + "&Token=" + ivleAuthToken,
                 new HashMap<String, String>(),
-                HttpManager.DEFAULT_TIMEOUT,
-                HttpManager.DEFAULT_RETRY_INTERVAL);
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        if (response.equals("\"\"")) {
+                            callback.handleIvleUserIdFailure("Invalid auth token");
+                        } else if (response.startsWith("\"") && response.endsWith("\"")) {
 
-        IvleLoginResult ivleResult = new IvleLoginResult("");
-        if (!requestResult.isSuccessful()) {
-            ivleResult.setFailure(requestResult.getFailureMessage());
-        } else {
-            String response = requestResult.getResponse();
-
-            if (response.equals("\"\"")) {
-                ivleResult.setFailure("Invalid auth token");
-            } else if (response.startsWith("\"") && response.endsWith("\"")) {
-
-                // id is surrounded with quotes, strip both of them off
-                String userId = response.substring(1, response.length() - 1);
-                ivleResult.setSuccessful(new User(userId, ivleAuthToken));
-            } else {
-                ivleResult.setFailure("Invalid app token or server is down.");
-            }
-        }
-
-        return ivleResult;
+                            // id is surrounded with quotes, strip both of them off
+                            String userId = response.substring(1, response.length() - 1);
+                            callback.handleIvleUserIdSuccess(new User(userId, ivleAuthToken));
+                        } else {
+                            callback.handleIvleUserIdFailure("Invalid app token or server is down.");
+                        }
+                    }
+                },
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String error) {
+                        callback.handleIvleUserIdFailure(error);
+                    }
+                });
     }
 
     // TODO: Tidy this class up
