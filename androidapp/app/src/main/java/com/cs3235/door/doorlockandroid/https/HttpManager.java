@@ -61,12 +61,10 @@ public class HttpManager {
         httpRequestQueue.add(request);
     }
 
-    public RequestResult<JSONObject> sendNewJsonRequest(int httpMethod, String url,
+    public void sendNewJsonRequestAsync(int httpMethod, String url,
                                                         JSONObject params,
-                                                        int timeOut, int retryInterval) {
-
-        final RequestResult<JSONObject> requestResult = new RequestResult<>();
-
+                                                        final Response.Listener<JSONObject> successCallback,
+                                                        final Response.Listener<String> errorCallback) {
         // create a new http json request
         JsonObjectRequest request = new JsonObjectRequest(
                 httpMethod,
@@ -75,99 +73,19 @@ public class HttpManager {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        synchronized (requestResult) {
-                            requestResult.setSuccessful(response);
-                        }
+                        successCallback.onResponse(response);
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        synchronized (requestResult) {
-                            requestResult.setFailure(error.getMessage());
-                        }
+                        errorCallback.onResponse(error.getMessage());
                     }
                 }
         );
 
         // dispatch the request
         httpRequestQueue.add(request);
-
-        // wait until we either receive the request or timeout
-        try {
-            for (int i = 0; i < (timeOut / retryInterval); i++) {
-
-                synchronized (requestResult) {
-                    if (!requestResult.isStillLoading()) {
-                        break;
-                    }
-                }
-
-                Thread.sleep(retryInterval);
-            }
-
-            synchronized (requestResult) {
-                if (!requestResult.isStillLoading()) {
-                    requestResult.setFailure(HTTP_RESPONSE_TIMEOUT);
-                }
-            }
-
-        } catch (InterruptedException e) {
-            synchronized (requestResult) {
-                requestResult.setFailure(HTTP_RESPONSE_WAIT_CANCELLED);
-            }
-        }
-
-        return requestResult;
-    }
-
-    public class RequestResult<T> {
-        private boolean stillLoading;
-
-        private boolean successful;
-
-        private T response;
-        private String failureMessage;
-
-        public RequestResult() {
-            stillLoading = true;
-            successful = false;
-
-            response = null;
-            failureMessage = "";
-        }
-
-        public void setSuccessful(T content) {
-            stillLoading = false;
-            successful = true;
-
-            response = content;
-            failureMessage = "";
-        }
-
-        public void setFailure(String message) {
-            stillLoading = false;
-            successful = false;
-
-            response = null;
-            failureMessage = message;
-        }
-
-        public boolean isStillLoading() {
-            return stillLoading;
-        }
-
-        public boolean isSuccessful() {
-            return successful;
-        }
-
-        public T getResponse() {
-            return response;
-        }
-
-        public String getFailureMessage() {
-            return getFailureMessage();
-        }
     }
 
     public String getDoorServerUrl() {

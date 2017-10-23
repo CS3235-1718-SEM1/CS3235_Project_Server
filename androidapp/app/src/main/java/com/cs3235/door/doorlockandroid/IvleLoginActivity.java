@@ -13,6 +13,7 @@ import android.webkit.WebViewClient;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
 import com.cs3235.door.doorlockandroid.login.IvleLoginManager;
 import com.cs3235.door.doorlockandroid.login.IvleLoginResultCallback;
+import com.cs3235.door.doorlockandroid.login.SmartphoneCardCallback;
 import com.cs3235.door.doorlockandroid.login.SmartphoneCardLoginManager;
 import com.cs3235.door.doorlockandroid.login.User;
 import com.cs3235.door.doorlockandroid.settings.SettingsManager;
@@ -22,7 +23,8 @@ import java.util.UUID;
 import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_IVLE_LOGIN_URL;
 import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_PHONE_UUID_KEY;
 
-public class IvleLoginActivity extends AppCompatActivity implements IvleLoginResultCallback  {
+public class IvleLoginActivity extends AppCompatActivity implements IvleLoginResultCallback,
+        SmartphoneCardCallback {
     private static final String CALLBACK_URL = "http://localhost/";
     private static final String URL_PARAMETER_PREFIX = "&url=";
     private static final String TOKEN_PREFIX = "?token=";
@@ -117,18 +119,21 @@ public class IvleLoginActivity extends AppCompatActivity implements IvleLoginRes
     public void handleIvleUserIdSuccess(User user) {
         SmartphoneCardLoginManager smartphoneCardManager =
                 new SmartphoneCardLoginManager(httpManager, getPhoneUuid());
-        SmartphoneCardLoginManager.SmartphoneCardLoginResult smartphoneDoorResult =
-                smartphoneCardManager.loginToSmartphoneCardSystem(user);
-
-        if (!smartphoneDoorResult.successful) {
-            loginFail(smartphoneDoorResult.failureMessage);
-        } else {
-            loginSuccess(smartphoneDoorResult.user);
-        }
+        smartphoneCardManager.loginToSmartphoneCardSystem(user, this);
     }
 
     @Override
     public void handleIvleUserIdFailure(String response) {
+        loginFail(response);
+    }
+
+    @Override
+    public void handleRegisterUserSuccess(User user) {
+        loginSuccess(user);
+    }
+
+    @Override
+    public void handleRegisterUserFailure(String response) {
         loginFail(response);
     }
 }
