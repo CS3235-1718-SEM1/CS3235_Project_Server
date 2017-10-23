@@ -13,6 +13,7 @@ import com.cs3235.door.doorlockandroid.settings.SettingsManager;
 import org.json.JSONObject;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_DOOR_SERVER_URL_KEY;
 import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_IVLE_GET_ID_URL;
@@ -31,6 +32,33 @@ public class HttpManager {
     public HttpManager(Context context, SettingsManager settingsManager) {
         this.settingsManager = settingsManager;
         this.httpRequestQueue = Volley.newRequestQueue(context);
+    }
+
+    public void sendNewStringRequestAsync(int httpMethod, String url,
+                                                           Map<String, String> params,
+                                                           final Response.Listener<String> successCallback,
+                                                           final Response.Listener<String> errorCallback) {
+        // create a new http string request
+        HttpStringRequest request = new HttpStringRequest(
+                httpMethod,
+                url,
+                params,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        successCallback.onResponse(response);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        errorCallback.onResponse(error.getMessage());
+                    }
+                }
+        );
+
+        // dispatch the request
+        httpRequestQueue.add(request);
     }
 
     public RequestResult<String> sendNewStringRequest(int httpMethod, String url, Map<String, String> params,
