@@ -12,6 +12,8 @@ import android.webkit.WebViewClient;
 
 import com.cs3235.door.doorlockandroid.https.HttpManager;
 import com.cs3235.door.doorlockandroid.login.IvleLoginManager;
+import com.cs3235.door.doorlockandroid.login.IvleLoginResultCallback;
+import com.cs3235.door.doorlockandroid.login.SmartphoneCardCallback;
 import com.cs3235.door.doorlockandroid.login.SmartphoneCardLoginManager;
 import com.cs3235.door.doorlockandroid.login.User;
 import com.cs3235.door.doorlockandroid.settings.SettingsManager;
@@ -21,7 +23,8 @@ import java.util.UUID;
 import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_IVLE_LOGIN_URL;
 import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_PHONE_UUID_KEY;
 
-public class IvleLoginActivity extends AppCompatActivity {
+public class IvleLoginActivity extends AppCompatActivity implements IvleLoginResultCallback,
+        SmartphoneCardCallback {
     private static final String CALLBACK_URL = "http://localhost/";
     private static final String URL_PARAMETER_PREFIX = "&url=";
     private static final String TOKEN_PREFIX = "?token=";
@@ -31,8 +34,6 @@ public class IvleLoginActivity extends AppCompatActivity {
 
     private WebView webView;
     private View progressView;
-
-    private UserLoginTask authTask = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,14 +54,12 @@ public class IvleLoginActivity extends AppCompatActivity {
      * at the start of the activity.
      */
     private void configureWebView() {
-        webView.loadUrl(getLoginUrl());
-
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading (WebView view,
                                               WebResourceRequest request) {
 
-                String currentUrl = view.getUrl();
+                String currentUrl = request.getUrl().toString();
                 String successUrlPrefix = CALLBACK_URL + TOKEN_PREFIX;
 
                 if (currentUrl.startsWith(successUrlPrefix)) {
@@ -72,6 +71,8 @@ public class IvleLoginActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        webView.loadUrl(getLoginUrl());
     }
 
     private String getLoginUrl() {
@@ -80,18 +81,8 @@ public class IvleLoginActivity extends AppCompatActivity {
     }
 
     private void onIvleLoginSuccess(String authToken) {
-        if (authTask != null) {
-            return;
-        }
-
-        showProgress(true);
-        authTask = new UserLoginTask(authToken);
-        authTask.execute((Void) null);
-    }
-
-    private void showProgress(boolean inProgress) {
-        progressView.setVisibility(inProgress ? View.VISIBLE : View.GONE);
-        webView.setVisibility(inProgress ? View.GONE : View.VISIBLE);
+        IvleLoginManager ivleLoginManager = new IvleLoginManager(httpManager);
+        ivleLoginManager.getUserWithAuthToken(authToken, this);
     }
 
     private String getPhoneUuid() {
@@ -105,68 +96,44 @@ public class IvleLoginActivity extends AppCompatActivity {
         return uuid;
     }
 
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
+    private void loginSuccess(User loggedInUser) {
+        Intent result = loggedInUser.generateIntent();
+        setResult(RESULT_OK, result);
 
-        private final String ivleAuthToken;
+        finish();
+    }
 
-        private User loggedInUser;
-        private String errorMessage;
-
-        UserLoginTask(String ivleAuthToken) {
-            this.ivleAuthToken = ivleAuthToken;
+    private void loginFail(String errorMessage) {
+        Intent failure = new Intent();
+        if (errorMessage == null) {
+            failure.setData(Uri.parse("Error message is blank."));
+        } else {
+            failure.setData(Uri.parse(errorMessage));
         }
+        setResult(RESULT_CANCELED, failure);
 
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            IvleLoginManager ivleLoginManager = new IvleLoginManager(httpManager);
-            IvleLoginManager.IvleLoginResult ivleResult = ivleLoginManager.getUserWithAuthToken(ivleAuthToken);
+        finish();
+    }
 
-            if (!ivleResult.successful) {
-                errorMessage = ivleResult.failureMessage;
-                return false;
-            }
+    @Override
+    public void handleIvleUserIdSuccess(User user) {
+        SmartphoneCardLoginManager smartphoneCardManager =
+                new SmartphoneCardLoginManager(httpManager, getPhoneUuid());
+        smartphoneCardManager.loginToSmartphoneCardSystem(user, this);
+    }
 
-            SmartphoneCardLoginManager smartphoneCardManager =
-                    new SmartphoneCardLoginManager(httpManager, getPhoneUuid());
-            SmartphoneCardLoginManager.SmartphoneCardLoginResult smartphoneDoorResult =
-                    smartphoneCardManager.loginToSmartphoneCardSystem(ivleResult.user);
+    @Override
+    public void handleIvleUserIdFailure(String response) {
+        loginFail(response);
+    }
 
-            if (!smartphoneDoorResult.successful) {
-                errorMessage = smartphoneDoorResult.failureMessage;
-                return false;
-            }
+    @Override
+    public void handleRegisterUserSuccess(User user) {
+        loginSuccess(user);
+    }
 
-            loggedInUser = smartphoneDoorResult.user;
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            authTask = null;
-            showProgress(false);
-
-            if (success) {
-                Intent result = loggedInUser.generateIntent();
-                setResult(RESULT_OK, result);
-
-                finish();
-            } else  {
-                Intent failure = new Intent();
-                failure.setData(Uri.parse(errorMessage));
-                setResult(RESULT_CANCELED, failure);
-
-                finish();
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            authTask = null;
-            showProgress(false);
-        }
+    @Override
+    public void handleRegisterUserFailure(String response) {
+        loginFail(response);
     }
 }

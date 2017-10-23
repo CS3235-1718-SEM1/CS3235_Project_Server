@@ -3,13 +3,13 @@
     <EditTextPreference
         android:key="pref_smartphoneCardServerUrl"
         android:title="Smartphone Card Server Url"
-        android:defaultValue="@string/local_host_ip"
+        android:defaultValue="@string/register_user_default_url"
         android:summary="Sets the URL to the smartphone card server"/>
 
     <EditTextPreference
         android:key="pref_doorServerUrl"
         android:title="Door Server Url"
-        android:defaultValue="@string/local_host_ip"
+        android:defaultValue="@string/door_server_default_url"
         android:summary="Sets the URl to the door server"/>
 
     <EditTextPreference
