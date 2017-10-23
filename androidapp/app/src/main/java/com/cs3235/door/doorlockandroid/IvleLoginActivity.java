@@ -53,14 +53,12 @@ public class IvleLoginActivity extends AppCompatActivity {
      * at the start of the activity.
      */
     private void configureWebView() {
-        webView.loadUrl(getLoginUrl());
-
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading (WebView view,
                                               WebResourceRequest request) {
 
-                String currentUrl = view.getUrl();
+                String currentUrl = request.getUrl().toString();
                 String successUrlPrefix = CALLBACK_URL + TOKEN_PREFIX;
 
                 if (currentUrl.startsWith(successUrlPrefix)) {
@@ -72,6 +70,8 @@ public class IvleLoginActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        webView.loadUrl(getLoginUrl());
     }
 
     private String getLoginUrl() {
