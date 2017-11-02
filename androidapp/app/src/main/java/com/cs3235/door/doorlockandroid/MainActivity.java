@@ -30,6 +30,8 @@ import static com.cs3235.door.doorlockandroid.FingerprintActivity.RESULT_FINGERP
 
 public class MainActivity extends AppCompatActivity implements DoorUnlockResultCallback {
 
+    private static final String MESSAGE_NEED_LOGIN = "You must login first.";
+
     private static int LOGIN_REQUEST_CODE = 0x000000001;
     private static int FINGER_PRINT_REQUEST_CODE = 0x000000002;
 
@@ -111,6 +113,11 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
     }
 
     public void onScanClick(View view) {
+        if (!isLoggedIn()) {
+            spawnToastMessage(MESSAGE_NEED_LOGIN);
+            return;
+        }
+
         new IntentIntegrator(this).initiateScan();
     }
 
@@ -132,6 +139,11 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
                     lastScannedDoor = NfcManager.handleNfcNdefDiscoveredIntent(intent);
 
                     if (lastScannedDoor != null) {
+                        if (!isLoggedIn()) {
+                            spawnToastMessage(MESSAGE_NEED_LOGIN);
+                            return;
+                        }
+
                         activateFingerprintActivity();
                     } else {
                         spawnToastMessage("Unrecognized NFC tag!");
@@ -271,5 +283,9 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
     private void updateNfcText() {
         TextView textView = (TextView) findViewById(R.id.nfcstatus);
         textView.setText(nfcEnabled ? "Nfc is enabled" : "Nfc is DISABLED - Enable it to scan.");
+    }
+
+    private boolean isLoggedIn() {
+        return loggedInUser != null;
     }
 }
