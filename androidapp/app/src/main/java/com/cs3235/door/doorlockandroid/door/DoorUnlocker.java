@@ -43,7 +43,7 @@ public class DoorUnlocker {
         requestParams.put("IVLE_id", requester.ivleId);
         requestParams.put("IVLE_token", userOtp);
 
-        Log.d(this.getClass().getName(), userOtp);
+        // Log.d(this.getClass().getName(), userOtp);
 
         httpManager.sendNewStringRequestAsync(
                 Request.Method.POST,

@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         }
 
         loggedInUser = User.createFromSettings(settingsManager);
-        Log.d(this.getClass().getName(), loggedInUser.secretKey);
+        // Log.d(this.getClass().getName(), loggedInUser.secretKey);
 
         nfcAdapterStateChangedReceiver = new BroadcastReceiver() {
             @Override
