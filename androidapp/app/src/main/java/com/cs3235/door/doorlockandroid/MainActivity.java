@@ -12,6 +12,7 @@ import android.os.Parcelable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -65,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements DoorUnlockResultC
         }
 
         loggedInUser = User.createFromSettings(settingsManager);
+        Log.d(this.getClass().getName(), loggedInUser.secretKey);
 
         nfcAdapterStateChangedReceiver = new BroadcastReceiver() {
             @Override

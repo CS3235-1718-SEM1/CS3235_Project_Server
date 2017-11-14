@@ -30,7 +30,8 @@ public class User {
     }
 
     private String getBase32EncodedSecretKey() {
-        return BaseEncoding.base32().encode(secretKey.getBytes());
+        return secretKey;
+        //return BaseEncoding.base32().encode(secretKey.getBytes());
     }
 
     public static User createFromLoginResultIntent(Intent loginIntentData) {

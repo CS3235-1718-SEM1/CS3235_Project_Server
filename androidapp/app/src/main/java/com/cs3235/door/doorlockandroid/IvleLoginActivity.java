@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -97,6 +98,7 @@ public class IvleLoginActivity extends AppCompatActivity implements IvleLoginRes
     }
 
     private void loginSuccess(User loggedInUser) {
+        Log.d(IvleLoginActivity.class.toString(), "IVLE login success.");
         Intent result = loggedInUser.generateIntent();
         setResult(RESULT_OK, result);
 
@@ -104,6 +106,12 @@ public class IvleLoginActivity extends AppCompatActivity implements IvleLoginRes
     }
 
     private void loginFail(String errorMessage) {
+        if (errorMessage != null) {
+            Log.d(IvleLoginActivity.class.toString(), "IVLE error: " + errorMessage.toString());
+        } else {
+            Log.d(IvleLoginActivity.class.toString(), "IVLE login error null");
+        }
+
         Intent failure = new Intent();
         if (errorMessage == null) {
             failure.setData(Uri.parse("Error message is blank."));
@@ -119,6 +127,7 @@ public class IvleLoginActivity extends AppCompatActivity implements IvleLoginRes
     public void handleIvleUserIdSuccess(User user) {
         SmartphoneCardLoginManager smartphoneCardManager =
                 new SmartphoneCardLoginManager(httpManager, getPhoneUuid());
+        Log.d(this.getClass().getName(), "Contacting smartphone now.");
         smartphoneCardManager.loginToSmartphoneCardSystem(user, this);
     }
 

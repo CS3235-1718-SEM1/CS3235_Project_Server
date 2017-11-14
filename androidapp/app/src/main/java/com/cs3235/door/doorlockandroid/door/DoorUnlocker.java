@@ -1,6 +1,7 @@
 package com.cs3235.door.doorlockandroid.door;
 
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -34,11 +35,15 @@ public class DoorUnlocker {
             return;
         }
 
+        String userOtp = requester.getUserOtp();
+
         Map<String, String> requestParams = new HashMap<>();
         requestParams.put("door_id", doorToUnlock.id);
         requestParams.put("door_token", doorToUnlock.otpToken);
         requestParams.put("IVLE_id", requester.ivleId);
-        requestParams.put("IVLE_token", requester.getUserOtp());
+        requestParams.put("IVLE_token", userOtp);
+
+        Log.d(this.getClass().getName(), userOtp);
 
         httpManager.sendNewStringRequestAsync(
                 Request.Method.POST,

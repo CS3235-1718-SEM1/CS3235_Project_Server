@@ -1,5 +1,7 @@
 package com.cs3235.door.doorlockandroid.login;
 
+import android.util.Log;
+
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
@@ -32,6 +34,12 @@ public class SmartphoneCardLoginManager {
                     new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject response) {
+                            Log.d(SmartphoneCardLoginManager.class.toString(), "Smartphone received good response.");
+                            if (response != null) {
+                                Log.d(SmartphoneCardLoginManager.class.toString(), "SmartphoneCard received: " + response.toString());
+                            } else {
+                                Log.d(SmartphoneCardLoginManager.class.toString(), "SmartphoneCard received null");
+                            }
                             try {
                                 boolean jsonSuccess = response.getBoolean("success");
 
@@ -50,6 +58,13 @@ public class SmartphoneCardLoginManager {
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
+                            Log.d(SmartphoneCardLoginManager.class.toString(), "ERROR!");
+                            if (response != null) {
+                                Log.d(SmartphoneCardLoginManager.class.toString(), "Smartphone Server error " + response.toString());
+                            } else {
+                                Log.d(SmartphoneCardLoginManager.class.toString(), "SmartphoneCard Server error null");
+                            }
+
                             callback.handleRegisterUserFailure(response);
                         }
                     }

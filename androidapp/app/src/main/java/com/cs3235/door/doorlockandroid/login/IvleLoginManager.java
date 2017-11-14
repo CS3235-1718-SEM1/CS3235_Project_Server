@@ -1,5 +1,7 @@
 package com.cs3235.door.doorlockandroid.login;
 
+import android.util.Log;
+
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.cs3235.door.doorlockandroid.https.HttpManager;
@@ -45,12 +47,13 @@ public class IvleLoginManager {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+                        Log.d(IvleLoginManager.class.toString(), "Ivle login received: " + response);
                         if (response.equals("\"\"")) {
                             callback.handleIvleUserIdFailure("Invalid auth token");
                         } else if (response.startsWith("\"") && response.endsWith("\"")) {
-
                             // id is surrounded with quotes, strip both of them off
                             String userId = response.substring(1, response.length() - 1);
+                            Log.d(IvleLoginManager.class.toString(), "GOt userId " + userId);
                             callback.handleIvleUserIdSuccess(new User(userId, ivleAuthToken));
                         } else {
                             callback.handleIvleUserIdFailure("Invalid app token or server is down.");
@@ -60,6 +63,7 @@ public class IvleLoginManager {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String error) {
+                        Log.d(IvleLoginManager.class.toString(), "Ivle login error received: " + error);
                         callback.handleIvleUserIdFailure(error);
                     }
                 });

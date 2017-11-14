@@ -1,10 +1,13 @@
 package com.cs3235.door.doorlockandroid.https;
 
 import android.content.Context;
+import android.util.Log;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
@@ -13,7 +16,6 @@ import com.cs3235.door.doorlockandroid.settings.SettingsManager;
 import org.json.JSONObject;
 
 import java.util.Map;
-import java.util.function.Consumer;
 
 import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_DOOR_SERVER_URL_KEY;
 import static com.cs3235.door.doorlockandroid.settings.SettingsManager.PREF_IVLE_GET_ID_URL;
@@ -57,8 +59,14 @@ public class HttpManager {
                 }
         );
 
+        request.setRetryPolicy((new DefaultRetryPolicy(100000, 10,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)));
+
         // dispatch the request
         httpRequestQueue.add(request);
+
+
+
     }
 
     public void sendNewJsonRequestAsync(int httpMethod, String url,
@@ -83,6 +91,9 @@ public class HttpManager {
                     }
                 }
         );
+
+        request.setRetryPolicy((new DefaultRetryPolicy(100000, 10,
+                        DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)));
 
         // dispatch the request
         httpRequestQueue.add(request);
